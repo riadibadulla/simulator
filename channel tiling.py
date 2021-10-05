@@ -21,9 +21,6 @@ x_test = x_test.astype("float32") / 255
 # Make sure images have shape (28, 28, 1)
 x_train = np.expand_dims(x_train, -1)
 x_test = np.expand_dims(x_test, -1)
-print("x_train shape:", x_train.shape)
-print(x_train.shape[0], "train samples")
-print(x_test.shape[0], "test samples")
 
 
 # convert class vectors to binary class matrices
@@ -110,24 +107,42 @@ outputs = np.array(outputs)
 #tile kernels
 
 z = 0
-T = np.empty((124,124))
+T = np.empty((62,62))
 
-for i in range(0,94,31):
-    for j in range(0,94,31):
+for i in range(0,32,31):
+    for j in range(0,32,31):
         T[i:i+31,j:j+31] = np.pad(kernels[z], 14, mode='constant')
         z+=1
+plt.axis('off')
 plt.imshow(T, cmap='Greys')
 plt.show()
 
-#pade input
-# I = np.pad(I, 14, mode='constant')
-plt.imshow(I,cmap='Greys')
+
+
+
+#pad input
+I = np.pad(I, 1, mode='constant')
+
+T_I = np.empty((60,60))
+T_I[0:30,0:30]=I
+T_I[0:30,30:60]=I
+T_I[30:60,0:30]=I
+T_I[30:60,30:60]=I
+
+plt.imshow(T_I)
+plt.axis('off')
+plt.show()
+tiled_output_onn = signal.convolve2d(T_I,T)
+plt.imshow(tiled_output_onn, cmap='Greys')
+plt.axis('off')
+plt.colorbar()
+plt.show()
+print(tiled_output_onn.shape)
+output_sum = tiled_output_onn[48:75,48:75]
+plt.imshow(output_sum, cmap='Greys')
+plt.axis('off')
 plt.colorbar()
 plt.show()
 
-tiled_output_onn = signal.convolve2d(I,T)
-plt.imshow(tiled_output_onn, cmap='Greys')
-plt.colorbar()
-plt.show()
 
 
