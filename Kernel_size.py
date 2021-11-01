@@ -31,7 +31,7 @@ def define_model():
     model.add(MaxPooling2D(pool_size=(2,2)))
     model.add(Conv2D(filters=128, kernel_size=(3, 3), activation='elu', padding='same'))
     model.add(Conv2D(filters=128, kernel_size=(3, 3), activation='elu', padding='same'))
-    model.add(MaxPooling2D(pool_size=(2,2)))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Flatten())
     model.add(Dense(128, activation='relu'))
     model.add(Dense(64, activation='relu'))
