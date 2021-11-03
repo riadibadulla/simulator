@@ -50,11 +50,12 @@ class Optics_simulation:
         self.plot_wavefront(self.wf, dict(vmax=1))
         wf_in_frequency_domain = self.make_fourier_engine(self.wf)
         self.plot_wavefront(wf_in_frequency_domain, dict(vmax=1))
-
-        amplitude_in_fourier = wf_in_frequency_domain.amplitude
-        convoluted_matrix = np.multiply(amplitude_in_fourier, initial_kernel)
-        self.wf.amplitude = convoluted_matrix
+        convoluted_matrix = np.multiply(wf_in_frequency_domain.wavefront, initial_kernel)
+        # print(convoluted_matrix)
+        self.wf.wavefront = convoluted_matrix
+        self.plot_wavefront(self.wf, dict(vmax=1))
         wf_imaged = self.make_fourier_engine(self.wf)
-        self.plot_wavefront(wf_imaged, dict(vmax=0.1))
+        self.plot_wavefront(wf_imaged, "default")
+        return wf_imaged.amplitude
 
 
