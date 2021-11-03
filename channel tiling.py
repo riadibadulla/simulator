@@ -1,8 +1,7 @@
 import numpy as np
-import keras
-from tensorflow.keras import layers
+from tensorflow import keras
+from keras import layers
 import tensorflow as tf
-from tensorflow.python.client import device_lib
 import matplotlib.pyplot as plt
 from scipy import signal
 
@@ -57,8 +56,8 @@ print("Test accuracy:", score[1])
 #get first layer kernels and reshape
 
 kernels = model.weights[0][:,:,0,:].numpy().transpose(2,1,0)
-# print(kernels[0])
-
+print(kernels[0])
+quit()
 #draw one test input
 # print(x_test[0])
 # plt.imshow(x_test[0], cmap='Greys')
