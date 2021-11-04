@@ -7,11 +7,12 @@ class Optics_simulation:
 
     def __init__(self):
         self.wavelength = 500 * u.nm
-        self.pixel_scale = 0.1 * u.um
+        self.pixel_scale = 10 * u.um
         self.npix = 300
         self.na = 0.35
         self.coherence_factor = 0
-        self.f= 0.0006 * u.cm
+
+        self.f = 6 * u.cm
         self.axis_unit = u.mm
         self.wf = po.Wavefront(self.wavelength, self.pixel_scale, self.npix)
         self.r = 2 * u.mm
@@ -38,6 +39,7 @@ class Optics_simulation:
         return waveform * self.fs * self.lens * self.fs
 
     def no_convolution_4F(self, input_image_link):
+        print(self.fs.calc_optimal_distance(self.wf))
         self.modulate_signal(input_image_link)
         self.plot_wavefront(self.wf, dict(vmax=1))
         # print(fs.calc_optimal_distance(wf))

@@ -53,12 +53,10 @@ def fft_based_convolution():
     plt.show()
 
 if __name__=='__main__':
-    fft_based_convolution()
+    # fft_based_convolution()
     optics = Optics_simulation()
     output = optics.convolution_4F(INPUT_IMAGE, kernel_in_frequency_domain(sample_kernel))
     output = np.fft.fftshift(output)
     plt.imshow(output, cmap='gray')
     plt.show()
-    # kernel_in_frequency_domain(sample_kernel)
-    # plot_fft()
     # optics.no_convolution_4F(INPUT_IMAGE)
