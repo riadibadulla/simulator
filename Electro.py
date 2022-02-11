@@ -1,12 +1,15 @@
 import numpy as np
 import scipy
 from scipy.signal import convolve2d
-
+from Optics_simulation import Optics_simulation
 
 mat1 = np.array([[2,3,4]])
 mat2 = np.array([[2,-1,2,4],[-5,2,1,3],[-5,2,1,2]])
 
-def conv_matmult(matrix1,matrix2):
+def optical_convolution(matrix1, matrix2):
+    simulator = Optics_simulation()
+
+def conv_matmult(matrix1, matrix2, optical=False):
     results_size_x = matrix1.shape[0]
     results_size_y = matrix2.shape[1]
     size_of_padding = results_size_y-1
