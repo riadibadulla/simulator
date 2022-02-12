@@ -7,13 +7,7 @@ from skimage import data
 from skimage.color import rgb2gray
 from skimage.transform import resize
 
-INPUT_IMAGE = resize(rgb2gray(data.chelsea()), (450,450))
 
-
-sample_kernel = [[ 0,  125, 255,0],
-                [ 0, 125,   255,0],
-                [ 0, 125, 255,0],
-                 [0,0,0,0]]
 
 
 def kernel_in_frequency_domain(kernel):
@@ -24,12 +18,20 @@ def kernel_in_frequency_domain(kernel):
     # plt.show()
     return kernel_fr
 
-def fft_based_convolution():
-    global sample_kernel
-    padded_kernel = np.pad(np.array(sample_kernel), 223)
-    img = INPUT_IMAGE
-    # img = np.dot(img[..., :3], [0.299, 0.587, 0.114])
-    # img = np.pad(np.array(img),0)
+def fft_based_convolution(img, sample_kernel):
+
+    size_of_image = img.shape[0]
+    size_of_kernel = sample_kernel.shape[0]
+    padding_size = abs(size_of_image - size_of_kernel) // 2
+
+    if size_of_image>size_of_kernel:
+        padded_kernel = np.pad(np.array(sample_kernel), padding_size)
+        if padded_kernel.shape != img.shape:
+            padded_kernel = np.pad(padded_kernel, ((0,1),(0,1)))
+    else:
+        padded_image = np.pad(np.array(img), padding_size)
+        if padded_image.shape != sample_kernel.shape:
+            padded_image = np.pad(padded_image, ((0,1),(0,1)))
 
     #fft of image
     signal_fr = np.fft.fftshift(np.fft.fft2(img))
@@ -49,22 +51,25 @@ def fft_based_convolution():
     plt.colorbar()
     plt.title("FFTConvolved")
     plt.show()
+    return abs(result)
 
-    # direct_convolution = scipy.signal.fftconvolve(img,sample_kernel)
-    # plt.imshow(abs(direct_convolution), cmap='gray')
-    # plt.title("direct convolution")
-    # plt.colorbar()
-    # plt.show()
+
+def optConv2d(img,kernel,pseudo_negativity=True):
+    if pseudo_negativity:
+        pos, neg = np.maximum(kernel, 0), np.maximum(kernel * (-1), 0)
+        output_pos = fft_based_convolution(INPUT_IMAGE, pos)
+        output_neg = fft_based_convolution(INPUT_IMAGE, neg)
+        output_fin = output_pos - output_neg
+    else:
+        output_fin = fft_based_convolution(INPUT_IMAGE, kernel)
+
+    plt.imshow(output_fin)
+    plt.show()
+
+    plt.imshow(signal.convolve2d(img,kernel))
+    plt.show()
 
 if __name__=='__main__':
-    # fft_based_convolution()
-    # optics = Optics_simulation()
-    # output = optics.convolution_4F(INPUT_IMAGE, kernel_in_frequency_domain(sample_kernel))
-    # output = np.fft.fftshift(output)
-    # plt.imshow(output, cmap='gray')
-    # plt.show()
-
-    # print(INPUT_IMAGE.shape)
-#     # kernel_fft = kernel_in_frequency_domain(sample_kernel)
-#     # print(kernel_fft.shape)
-    fft_based_convolution()
+    kernel = np.random.random(size=(7, 7)) - 0.5
+    INPUT_IMAGE = resize(rgb2gray(data.chelsea()), (450, 450)) / 255
+    optConv2d(INPUT_IMAGE,kernel,True)
