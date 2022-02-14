@@ -9,15 +9,20 @@ import seaborn as sns
 class Optics_simulation:
 
     def __init__(self,number_of_pixels):
+
         self.wavelength = 500 * u.nm
         self.npix = number_of_pixels
         self.na = 0.35
         self.coherence_factor = 0
-        self.f = 6 * u.cm
+        self.f = 3 * u.cm
         self.axis_unit = u.mm
-        self.pixel_scale = 170/math.sqrt(number_of_pixels)*u.um
+        self.pixel_scale = 122.5/math.sqrt(number_of_pixels)*u.um
+
+        self.img_sys = po.ImagingSystem(self.wavelength, self.pixel_scale, self.npix, self.coherence_factor)
+        self.img_sys.calculate()
+
         self.wf = po.Wavefront(self.wavelength, self.pixel_scale, self.npix)
-        self.r = 2 * u.mm
+        self.r = 0.01 * u.mm
         self.lens = po.ThinLens(2*self.r, self.f)
         self.fs = po.FreeSpace(self.f)
 
