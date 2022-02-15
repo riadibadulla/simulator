@@ -22,7 +22,7 @@ class Optics_simulation:
         self.img_sys.calculate()
 
         self.wf = po.Wavefront(self.wavelength, self.pixel_scale, self.npix)
-        self.r = 0.01 * u.mm
+        self.r = 4 * u.mm
         self.lens = po.ThinLens(2*self.r, self.f)
         self.fs = po.FreeSpace(self.f)
 
@@ -59,3 +59,27 @@ class Optics_simulation:
         return wf_imaged.amplitude
 
 
+
+if __name__=='__main__':
+    np.random.seed(2022)
+    img = np.random.random(size=(10, 10))
+
+    #NORMAL FFT
+    img_fr = np.fft.fftshift(np.fft.fft2(img))
+    sns.heatmap(abs(img_fr), annot=True)
+    plt.show()
+
+    #OPTICS
+    wavelength = 500 * u.nm
+    npix = 10
+    f = 12.8 * u.m
+    pixel_scale = 0.8 * u.mm
+    wf = po.Wavefront(wavelength, pixel_scale, npix)
+    r = 4 * u.mm
+    lens = po.ThinLens(r, f)
+    fs = po.FreeSpace(f)
+
+    wf.amplitude = img
+    wf_in_frequency_domain = wf * fs * lens * fs
+    ax = sns.heatmap(wf_in_frequency_domain.amplitude, annot=True)
+    plt.show()
