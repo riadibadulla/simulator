@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 from scipy import signal
 import scipy
-from skimage import data
+from skimage import io
 from skimage.color import rgb2gray
 from skimage.transform import resize
 import seaborn as sns
@@ -55,20 +55,19 @@ def optConv2d(img,kernel,pseudo_negativity=True):
         output_neg = optics.no_convolution_4F(output_neg)
         output_fin = output_pos - output_neg
     else:
-        output_fin = fft_based_convolution(INPUT_IMAGE, kernel)
+        output_fin = fft_based_convolution(img, kernel)
+        output_fin = optics.no_convolution_4F(output_fin)
 
-    ax = sns.heatmap(output_fin, annot=True)
+    plt.imshow(output_fin, cmap='gray')
     plt.show()
-    fx = sns.heatmap(signal.fftconvolve(img,kernel, mode="same"), annot=True)
+    plt.imshow(signal.fftconvolve(img,kernel, mode="same"), cmap='gray')
     plt.show()
 
 if __name__=='__main__':
-    np.random.seed(2022)
-    kernel = np.random.random(size=(4, 4))
-    INPUT_IMAGE = np.random.random(size=(6,6))
-    img_fr = np.fft.fftshift(np.fft.fft2(INPUT_IMAGE))
-    print(img_fr)
-    sns.heatmap(abs(img_fr), annot=True)
+    img = io.imread("noisy.jpg")
+    img = rgb2gray(img)
+    kernel = np.array([[1,4,7,4,1],[4,16,26,16,4],[7,26,41,26,7],[4,16,26,16,4],[1,4,7,4,1]])
+    sns.heatmap(kernel, annot=True)
     plt.show()
 
-    optConv2d(INPUT_IMAGE,kernel,False)
+    optConv2d(img,kernel,False)
