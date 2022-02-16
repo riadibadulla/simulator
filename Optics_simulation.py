@@ -5,6 +5,7 @@ import numpy as np
 import pyoptica as po
 from matplotlib import pyplot as plt
 import seaborn as sns
+import cv2
 
 class Optics_simulation:
 
@@ -62,24 +63,23 @@ class Optics_simulation:
 
 if __name__=='__main__':
     np.random.seed(2022)
-    img = np.random.random(size=(10, 10))
-
+    img = cv2.imread("text.png",0)
+    print(img.shape)
     #NORMAL FFT
     img_fr = np.fft.fftshift(np.fft.fft2(img))
-    sns.heatmap(abs(img_fr), annot=True)
+    plt.imshow(abs(img_fr))
     plt.show()
-
     #OPTICS
     wavelength = 500 * u.nm
-    npix = 10
-    f = 12.8 * u.m
-    pixel_scale = 0.8 * u.mm
+    npix = 300
+    f = 6 * u.cm
+    pixel_scale = 10 * u.um
     wf = po.Wavefront(wavelength, pixel_scale, npix)
-    r = 4 * u.mm
+    r = 1.5 * u.mm
     lens = po.ThinLens(r, f)
     fs = po.FreeSpace(f)
 
     wf.amplitude = img
     wf_in_frequency_domain = wf * fs * lens * fs
-    ax = sns.heatmap(wf_in_frequency_domain.amplitude, annot=True)
+    plt.imshow(wf_in_frequency_domain.amplitude)
     plt.show()
