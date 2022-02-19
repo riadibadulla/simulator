@@ -62,3 +62,37 @@ class Optics_simulation:
         wf_imaged = self.wf * self.fs * self.lens * self.fs * self.filter * self.fs * self.lens * self.fs
         return wf_imaged.amplitude
 
+    def process_inputs(self,img, sample_kernel):
+
+        size_of_image = img.shape[0]
+        size_of_kernel = sample_kernel.shape[0]
+        padding_size = abs(size_of_image - size_of_kernel) // 2
+
+        if size_of_image>size_of_kernel:
+            padded_kernel = np.pad(np.array(sample_kernel), padding_size)
+            if padded_kernel.shape != img.shape:
+                padded_kernel = np.pad(padded_kernel, ((0,1),(0,1)))
+        else:
+            #TODO: Needs to be refactored
+            padded_image = np.pad(np.array(img), padding_size)
+            if padded_image.shape != sample_kernel.shape:
+                padded_image = np.pad(padded_image, ((0,1),(0,1)))
+        return img, padded_kernel
+
+
+    def optConv2d(self, img,kernel,pseudo_negativity=True):
+        # if pseudo_negativity:
+        #     pos, neg = np.maximum(kernel, 0), np.maximum(kernel * (-1), 0)
+        #     output_pos = fft_based_convolution(INPUT_IMAGE, pos)
+        #     output_pos = optics.no_convolution_4F(output_pos)
+        #     output_neg = fft_based_convolution(INPUT_IMAGE, neg)
+        #     optics = Optics_simulation(img.shape[0])
+        #     output_neg = optics.no_convolution_4F(output_neg)
+        #     output_fin = output_pos - output_neg
+        # else:
+        img, kernel = self.process_inputs(img, kernel)
+        #TODO: adapt size of inputs to npix
+        result = self.convolution_4F(img, kernel)
+        result = np.fft.fftshift(result)
+        output_final = self.no_convolution_4F(result)
+        return output_final
