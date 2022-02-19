@@ -81,18 +81,15 @@ class Optics_simulation:
 
 
     def optConv2d(self, img,kernel,pseudo_negativity=True):
-        # if pseudo_negativity:
-        #     pos, neg = np.maximum(kernel, 0), np.maximum(kernel * (-1), 0)
-        #     output_pos = fft_based_convolution(INPUT_IMAGE, pos)
-        #     output_pos = optics.no_convolution_4F(output_pos)
-        #     output_neg = fft_based_convolution(INPUT_IMAGE, neg)
-        #     optics = Optics_simulation(img.shape[0])
-        #     output_neg = optics.no_convolution_4F(output_neg)
-        #     output_fin = output_pos - output_neg
-        # else:
         img, kernel = self.process_inputs(img, kernel)
-        #TODO: adapt size of inputs to npix
-        result = self.convolution_4F(img, kernel)
+        if pseudo_negativity:
+            pos, neg = np.maximum(kernel, 0), np.maximum(kernel * (-1), 0)
+            output_pos = self.convolution_4F(img, pos)
+            output_neg = self.convolution_4F(img, neg)
+            result = output_pos - output_neg
+        else:
+            #TODO: adapt size of inputs to npix
+            result = self.convolution_4F(img, kernel)
         result = np.fft.fftshift(result)
         output_final = self.no_convolution_4F(result)
         return output_final
