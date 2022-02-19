@@ -36,10 +36,8 @@ def fft_based_convolution(img, sample_kernel):
         if padded_image.shape != sample_kernel.shape:
             padded_image = np.pad(padded_image, ((0,1),(0,1)))
 
-    #kernel fft
-    kernel_fr = np.fft.fftshift(np.fft.fft2(padded_kernel))
     optics = Optics_simulation(size_of_image)
-    result = optics.convolution_4F(img,kernel_fr)
+    result = optics.convolution_4F(img,padded_kernel)
     result = np.fft.fftshift(result)
     return result
 
