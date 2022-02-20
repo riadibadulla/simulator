@@ -35,10 +35,6 @@ class Optics_simulation:
         self.fs = po.FreeSpace(self.f)
         self.filter = Filter()
 
-    def rgb2gray(self, rgb):
-        img = np.dot(rgb[..., :3], [0.299, 0.587, 0.114])
-        return img
-
     def plot_wavefront(self, wavefront, amplitude):
         # fig = wavefront.plot(amplitude=amplitude, fig_options=dict(figsize=(5, 5), dpi=130))
         # fig[0].show()
@@ -62,22 +58,24 @@ class Optics_simulation:
         wf_imaged = self.wf * self.fs * self.lens * self.fs * self.filter * self.fs * self.lens * self.fs
         return wf_imaged.amplitude
 
-    def process_inputs(self,img, sample_kernel):
+    def __pad(self,large,small,padding_size):
+        small = np.pad(small, padding_size)
+        if small.shape != large.shape:
+            small = np.pad(small, ((0, 1), (0, 1)))
+        return large,small
+
+    def process_inputs(self,img, kernel):
+        if img.shape==kernel.shape:
+            return img, kernel
 
         size_of_image = img.shape[0]
-        size_of_kernel = sample_kernel.shape[0]
+        size_of_kernel = kernel.shape[0]
         padding_size = abs(size_of_image - size_of_kernel) // 2
-
-        if size_of_image>size_of_kernel:
-            padded_kernel = np.pad(np.array(sample_kernel), padding_size)
-            if padded_kernel.shape != img.shape:
-                padded_kernel = np.pad(padded_kernel, ((0,1),(0,1)))
+        if size_of_image > size_of_kernel:
+            img, kernel = self.__pad(img,kernel,padding_size)
         else:
-            #TODO: Needs to be refactored
-            padded_image = np.pad(np.array(img), padding_size)
-            if padded_image.shape != sample_kernel.shape:
-                padded_image = np.pad(padded_image, ((0,1),(0,1)))
-        return img, padded_kernel
+            kernel, img = self.__pad(kernel,img,padding_size)
+        return img, kernel
 
 
     def optConv2d(self, img,kernel,pseudo_negativity=True):
