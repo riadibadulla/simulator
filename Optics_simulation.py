@@ -5,6 +5,11 @@ import numpy as np
 import pyoptica as po
 from matplotlib import pyplot as plt
 import seaborn as sns
+from torch import tensor
+from skimage import io
+from skimage.color import rgb2gray
+from scipy import signal
+import torch
 
 class Filter(po.BaseOpticalElement):
 
@@ -59,9 +64,9 @@ class Optics_simulation:
         return wf_imaged.amplitude
 
     def __pad(self,large,small,padding_size):
-        small = np.pad(small, padding_size)
+        small = torch.nn.functional.pad(small, (padding_size,padding_size,padding_size,padding_size))
         if small.shape != large.shape:
-            small = np.pad(small, ((0, 1), (0, 1)))
+            small = torch.nn.functional.pad(small, (0,1,0,1))
         return large,small
 
     def process_inputs(self,img, kernel):
@@ -80,6 +85,8 @@ class Optics_simulation:
 
     def optConv2d(self, img,kernel,pseudo_negativity=True):
         img, kernel = self.process_inputs(img, kernel)
+        print(type(img))
+        print(type(kernel))
         if pseudo_negativity:
             pos, neg = np.maximum(kernel, 0), np.maximum(kernel * (-1), 0)
             output_pos = self.convolution_4F(img, pos)
@@ -91,3 +98,17 @@ class Optics_simulation:
         result = np.fft.fftshift(result)
         output_final = self.no_convolution_4F(result)
         return output_final
+
+if __name__ == '__main__':
+    img = io.imread("noisy.jpg")
+    img = rgb2gray(img)
+    img = torch.tensor(img)
+    optics = Optics_simulation(img.shape[0])
+    kernel = np.array(
+        [[1, 4, 7, 4, 1], [4, 16, 26, 16, 4], [7, 26, 41, 26, 7], [4, 16, 26, 16, 4], [1, 4, 7, 4, 1]])
+    kernel = torch.tensor(kernel)
+    output = optics.optConv2d(img, kernel, True)
+    plt.imshow(output, cmap='gray')
+    plt.show()
+    plt.imshow(signal.fftconvolve(img, kernel, mode="same"), cmap='gray')
+    plt.show()
