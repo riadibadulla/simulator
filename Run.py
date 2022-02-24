@@ -16,10 +16,10 @@ from OpticalConv2d import OpticalConv2d
 class Net(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = OpticalConv2d(1,10,3,padding="same")
+        self.conv1 = nn.Conv2d(1,10,3,padding="same")
         self.activation = nn.ReLU(inplace=True)
         self.pool = nn.MaxPool2d(2)
-        self.conv2 = nn.Conv2d(10,20,3, padding="same")
+        self.conv2 = OpticalConv2d(10,20,3, padding="same")
         self.flatten = nn.Flatten()
         self.fc = nn.Linear(980,10)
 
@@ -94,7 +94,7 @@ def train():
 if __name__=='__main__':
     # test()
     train_data = MNIST('/files/', train=True, download=True, transform=transforms.ToTensor())
-    train_loader = torch.utils.data.DataLoader(train_data,batch_size=1,shuffle=True,num_workers=1)
+    train_loader = torch.utils.data.DataLoader(train_data,batch_size=2,shuffle=True,num_workers=1)
     test_data = MNIST('/files/', train=False, download=True, transform=transforms.ToTensor())
     test_loader = torch.utils.data.DataLoader(test_data, batch_size=1, shuffle=True, num_workers=1)
     net = Net()

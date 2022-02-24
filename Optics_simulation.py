@@ -23,7 +23,7 @@ class Filter(po.BaseOpticalElement):
 
 class Optics_simulation:
 
-    def __init__(self,number_of_pixels):
+    def __init__(self,number_of_pixels=300):
 
         self.wavelength = 500 * u.nm
         self.npix = number_of_pixels
