@@ -1,5 +1,6 @@
 *.png
 .idea
+.idea/
 venv
 /venv
 *.jpg

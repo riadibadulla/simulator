@@ -34,21 +34,6 @@ class Net(nn.Module):
         x = self.fc(x)
         return x
 
-def test():
-    img = io.imread("noisy.jpg")
-    img = rgb2gray(img)
-    optics = Optics_simulation(img.shape[0])
-    kernel = np.array(
-        [[-1, -4, -7, -4, -1], [-4, 16, 26, 16, -4], [-7, 26, 41, 26, -7], [-4, 16, 26, 16, -4], [-1, -4, -7, -4, -1]])
-    sns.heatmap(kernel, annot=True)
-    plt.show()
-    output = optics.optConv2d(img, kernel, True)
-    plt.imshow(output, cmap='gray')
-    plt.show()
-    plt.imshow(signal.fftconvolve(img, kernel, mode="same"), cmap='gray')
-    plt.show()
-
-
 def train():
     best_val_loss = 10000
     best_val_acc = 0
