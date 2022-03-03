@@ -85,9 +85,10 @@ class Optics_simulation:
         return img, kernel
 
 
-    def optConv2d(self, img,kernel,pseudo_negativity=True):
+    def optConv2d(self, img,kernel,pseudo_negativity=False):
         img, kernel = self.process_inputs(img, kernel)
         if pseudo_negativity:
+            #TODO: make it tensor
             pos, neg = np.maximum(kernel, 0), np.maximum(kernel * (-1), 0)
             output_pos = self.convolution_4F(img, pos)
             output_neg = self.convolution_4F(img, neg)
@@ -95,20 +96,20 @@ class Optics_simulation:
         else:
             #TODO: adapt size of inputs to npix
             result = self.convolution_4F(img, kernel)
-        result = np.fft.fftshift(result)
+        result = torch.fft.fftshift(result)
         output_final = self.no_convolution_4F(result)
         return output_final
 
-if __name__ == '__main__':
-    img = io.imread("noisy.jpg")
-    img = rgb2gray(img)
-    img = torch.tensor(img)
-    optics = Optics_simulation(img.shape[0])
-    kernel = np.array(
-        [[1, 4, 7, 4, 1], [4, 16, 26, 16, 4], [7, 26, 41, 26, 7], [4, 16, 26, 16, 4], [1, 4, 7, 4, 1]])
-    kernel = torch.tensor(kernel)
-    output = optics.optConv2d(img, kernel, False)
-    plt.imshow(output, cmap='gray')
-    plt.show()
-    plt.imshow(signal.fftconvolve(img, kernel, mode="same"), cmap='gray')
-    plt.show()
+# if __name__ == '__main__':
+#     img = io.imread("noisy.jpg")
+#     img = rgb2gray(img)
+#     img = torch.tensor(img)
+#     optics = Optics_simulation(img.shape[0])
+#     kernel = np.array(
+#         [[1, 4, 7, 4, 1], [4, 16, 26, 16, 4], [7, 26, 41, 26, 7], [4, 16, 26, 16, 4], [1, 4, 7, 4, 1]])
+#     kernel = torch.tensor(kernel)
+#     output = optics.optConv2d(img, kernel, False)
+#     plt.imshow(output, cmap='gray')
+#     plt.show()
+#     plt.imshow(signal.fftconvolve(img, kernel, mode="same"), cmap='gray')
+#     plt.show()

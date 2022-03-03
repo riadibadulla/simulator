@@ -1,7 +1,7 @@
 import astropy.units as u
 import numpy as np
 from astropy.io import fits
-
+import torch
 from . import distribution
 
 
@@ -57,7 +57,7 @@ class Wavefront(distribution.Distribution):
     @u.quantity_input(wavelength=u.m, pixel_scale=u.m)
     def __init__(self, wavelength, pixel_scale, npix):
         super().__init__(wavelength, pixel_scale, npix)
-        self.wavefront = np.ones((npix, npix), dtype=np.complex64)
+        self.wavefront = torch.ones((npix, npix), dtype=torch.complex64)
         self.logger.debug(f"Created {self}")
 
     @property
@@ -70,11 +70,11 @@ class Wavefront(distribution.Distribution):
             leaving phase unchanged.
         :type: np.array
         """
-        return np.abs(self.wavefront)
+        return torch.abs(self.wavefront)
 
     @amplitude.setter
     def amplitude(self, amplitude):
-        self.wavefront = amplitude * np.exp(1.j * self.phase)
+        self.wavefront = amplitude * torch.exp(1.j * self.phase)
 
     @property
     def intensity(self):
@@ -105,11 +105,11 @@ class Wavefront(distribution.Distribution):
         :type: np.array
 
         """
-        return np.angle(self.wavefront)
+        return torch.angle(self.wavefront)
 
     @phase.setter
     def phase(self, phase):
-        self.wavefront = self.amplitude * np.exp(1.j * phase)
+        self.wavefront = self.amplitude * torch.exp(1.j * phase)
 
     def to_fits(self, path):
         """A method to serialize wavefront to fits. Amplitude and phase are saved

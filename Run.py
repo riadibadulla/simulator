@@ -10,7 +10,7 @@ from torchvision.datasets import MNIST
 from torchvision.transforms import transforms
 import torch.utils.data
 from torch import optim
-from tqdm.notebook import tqdm_notebook
+from tqdm import tqdm
 from OpticalConv2d import OpticalConv2d
 
 class Net(nn.Module):
@@ -63,7 +63,7 @@ def train():
         total = 0
         total_val = 0
         correct_val = 0
-        for i, data in enumerate(tqdm_notebook(train_loader, desc="Epoch: " + str(epoch + 1)), 0):
+        for i, data in enumerate(tqdm(train_loader, desc="Epoch: " + str(epoch + 1)), 0):
             # get the inputs; data is a list of [inputs, labels]
             net.train()
             inputs, labels = data

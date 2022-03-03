@@ -7,7 +7,7 @@ from typing import Optional, List, Tuple, Union
 from torch.nn.modules.utils import _single, _pair, _triple, _reverse_repeat_tuple
 from Optics_simulation import Optics_simulation
 
-opt = Optics_simulation()
+opt = Optics_simulation(14)
 
 class OpticalConv2d(nn.Conv2d):
     def _conv_forward(self, input: Tensor, weight: Tensor, bias: Optional[Tensor]):
