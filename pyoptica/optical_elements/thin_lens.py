@@ -85,7 +85,7 @@ class ThinLens(BaseOpticalElement):
                     2 * self.radius) * wavefront.wavelength
         # Just for readable output.
         min_sampling = min_sampling.to(wavefront.pixel_scale.unit)
-        if wavefront.pixel_scale > min_sampling:
-            warning = f'Bad sampling: {wavefront.pixel_scale} > {min_sampling}'
-            self.logger.warning(warning)
-            warnings.warn(warning)
+        # if wavefront.pixel_scale > min_sampling:
+        #     warning = f'Bad sampling: {wavefront.pixel_scale} > {min_sampling}'
+        #     self.logger.warning(warning)
+        #     warnings.warn(warning)

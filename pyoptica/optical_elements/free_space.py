@@ -170,8 +170,8 @@ class FreeSpace(BaseOpticalElement):
             wf_at_distance = wf_at_distance * H
         wf_at_distance = utils.ifft(wf_at_distance)
         propagated_wf.wavefront = wf_at_distance
-        self.logger.info(
-            f"Propagated using '{self.method}' to {self.distance:.0}.")
+        # self.logger.info(
+        #     f"Propagated using '{self.method}' to {self.distance:.0}.")
         return propagated_wf
 
     def amplitude_transmittance(self, wavefront):
