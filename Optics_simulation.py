@@ -15,16 +15,17 @@ class Filter(po.BaseOpticalElement):
 
     def __init__(self, filter=None):
         if filter:
-            self.filter = np.fft.fftshift(np.fft.fft2(filter))
+            self.filter = torch.fft.fftshift(torch.fft.fft2(filter))
 
     def set_filter(self,filter):
-        self.filter = np.fft.fftshift(np.fft.fft2(filter))
+        self.filter = torch.fft.fftshift(torch.fft.fft2(filter))
 
     def amplitude_transmittance(self, wavefront):
         return self.filter
 
     def phase_transmittance(self, wavefront):
-        return np.ones_like(wavefront.phase)
+        #TODO: may need to edit phase getter
+        return torch.ones_like(torch.tensor(wavefront.phase))
 
 class Optics_simulation:
 
@@ -60,6 +61,7 @@ class Optics_simulation:
     def convolution_4F(self, img, kernel):
         self.wf.amplitude = img
         self.filter.set_filter(kernel)
+        # wf_imaged = self.wf * self.fs * self.lens * self.fs * self.filter * self.fs * self.lens * self.fs
         wf_imaged = self.wf * self.fs * self.lens * self.fs * self.filter * self.fs * self.lens * self.fs
         return wf_imaged.amplitude
 
@@ -85,8 +87,6 @@ class Optics_simulation:
 
     def optConv2d(self, img,kernel,pseudo_negativity=True):
         img, kernel = self.process_inputs(img, kernel)
-        print(type(img))
-        print(type(kernel))
         if pseudo_negativity:
             pos, neg = np.maximum(kernel, 0), np.maximum(kernel * (-1), 0)
             output_pos = self.convolution_4F(img, pos)
@@ -107,7 +107,7 @@ if __name__ == '__main__':
     kernel = np.array(
         [[1, 4, 7, 4, 1], [4, 16, 26, 16, 4], [7, 26, 41, 26, 7], [4, 16, 26, 16, 4], [1, 4, 7, 4, 1]])
     kernel = torch.tensor(kernel)
-    output = optics.optConv2d(img, kernel, True)
+    output = optics.optConv2d(img, kernel, False)
     plt.imshow(output, cmap='gray')
     plt.show()
     plt.imshow(signal.fftconvolve(img, kernel, mode="same"), cmap='gray')
