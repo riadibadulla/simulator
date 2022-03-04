@@ -79,12 +79,11 @@ def train():
 if __name__=='__main__':
     # test()
     train_data = MNIST('/files/', train=True, download=True, transform=transforms.ToTensor())
-    train_loader = torch.utils.data.DataLoader(train_data,batch_size=2,shuffle=True,num_workers=1)
+    train_loader = torch.utils.data.DataLoader(train_data,batch_size=4,shuffle=True,num_workers=1)
     test_data = MNIST('/files/', train=False, download=True, transform=transforms.ToTensor())
-    test_loader = torch.utils.data.DataLoader(test_data, batch_size=1, shuffle=True, num_workers=1)
+    test_loader = torch.utils.data.DataLoader(test_data, batch_size=5, shuffle=True, num_workers=1)
     net = Net()
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
     train()
-
