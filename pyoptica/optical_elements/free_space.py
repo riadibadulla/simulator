@@ -165,7 +165,7 @@ class FreeSpace(BaseOpticalElement):
         steps_number, step_size = self.calc_propagation_steps(wavefront)
         h = FreeSpace(step_size, method=self.method).phase_transmittance(wavefront)
         H = utils.fft(h)
-        wf_at_distance = utils.fft(torch.tensor(wavefront.wavefront))
+        wf_at_distance = utils.fft(wavefront.wavefront)
         for _ in range(steps_number):
             wf_at_distance = wf_at_distance * H
         wf_at_distance = utils.ifft(wf_at_distance)
@@ -193,7 +193,7 @@ class FreeSpace(BaseOpticalElement):
         :return: distribution of phase transmittance resulting from the free space.
         :rtype: numpy.array
         """
-        H = torch.zeros_like(torch.tensor(wavefront.wavefront))
+        H = torch.zeros_like(wavefront.wavefront)
         pix_scale_m = wavefront.pixel_scale.to(u.m).value
         wavelen_m = wavefront.wavelength.to(u.m).value
         distance_m = self.distance.to(u.m).value
@@ -210,5 +210,6 @@ class FreeSpace(BaseOpticalElement):
             exp_1 = 1.j * k * distance_m
             exp_2 = -1.j * np.pi * wavelen_m * distance_m * rhosqr
             # H = np.exp(exp_1 + exp_2)
+            #TODO: may need to edit ks and xys to be tensor from the begining
             H = torch.exp(torch.tensor(exp_1) + torch.tensor(exp_2))
         return utils.ifft(H)

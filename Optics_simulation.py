@@ -7,9 +7,12 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 from torch import tensor
 from skimage import io
+from skimage.transform import rescale, resize, downscale_local_mean
 from skimage.color import rgb2gray
 from scipy import signal
 import torch
+from torch.autograd import Variable
+import torch.nn.functional as F
 
 class Filter(po.BaseOpticalElement):
 
@@ -25,7 +28,7 @@ class Filter(po.BaseOpticalElement):
 
     def phase_transmittance(self, wavefront):
         #TODO: may need to edit phase getter
-        return torch.ones_like(torch.tensor(wavefront.phase))
+        return torch.ones_like(wavefront.phase)
 
 class Optics_simulation:
 
@@ -36,8 +39,8 @@ class Optics_simulation:
         self.f = 6 * u.cm
         self.pixel_scale = 10 *u.um
         self.wf = po.Wavefront(self.wavelength, self.pixel_scale, self.npix)
-        self.r = 1.5 * u.mm
-        self.lens = po.ThinLens(2*self.r, self.f)
+        self.r = 4 * u.mm
+        self.lens = po.ThinLens(self.r, self.f)
         self.fs = po.FreeSpace(self.f)
         self.filter = Filter()
 
@@ -61,8 +64,11 @@ class Optics_simulation:
     def convolution_4F(self, img, kernel):
         self.wf.amplitude = img
         self.filter.set_filter(kernel)
-        # wf_imaged = self.wf * self.fs * self.lens * self.fs * self.filter * self.fs * self.lens * self.fs
         wf_imaged = self.wf * self.fs * self.lens * self.fs * self.filter * self.fs * self.lens * self.fs
+        # test_loss = wf_imaged.amplitude.mean()
+        # test_loss.backward()
+        # print(test_loss.grad_fn)
+        # quit()
         return wf_imaged.amplitude
 
     def __pad(self,large,small,padding_size):
@@ -100,16 +106,21 @@ class Optics_simulation:
         output_final = self.no_convolution_4F(result)
         return output_final
 
-# if __name__ == '__main__':
-#     img = io.imread("noisy.jpg")
-#     img = rgb2gray(img)
-#     img = torch.tensor(img)
-#     optics = Optics_simulation(img.shape[0])
-#     kernel = np.array(
-#         [[1, 4, 7, 4, 1], [4, 16, 26, 16, 4], [7, 26, 41, 26, 7], [4, 16, 26, 16, 4], [1, 4, 7, 4, 1]])
-#     kernel = torch.tensor(kernel)
-#     output = optics.optConv2d(img, kernel, False)
-#     plt.imshow(output, cmap='gray')
-#     plt.show()
-#     plt.imshow(signal.fftconvolve(img, kernel, mode="same"), cmap='gray')
-#     plt.show()
+
+if __name__ == '__main__':
+    img = io.imread("mnist-test.jpg")
+    img = rgb2gray(img)
+    img = resize(img, (28,28),anti_aliasing=True)
+    plt.imshow(img, cmap='gray')
+    plt.show()
+    img1 = Variable(torch.tensor(img), requires_grad=True)
+    optics = Optics_simulation(img1.shape[0])
+    kernel = np.array(
+        [[1, 4, 7, 4, 1], [4, 16, 26, 16, 4], [7, 26, 41, 26, 7], [4, 16, 26, 16, 4], [1, 4, 7, 4, 1]])
+    kernel = Variable(torch.tensor(kernel, dtype=torch.float64), requires_grad=True)
+    output = optics.optConv2d(img1, kernel, False)
+    output = resize(output.detach().numpy(), (28,28),anti_aliasing=True)
+    plt.imshow(output, cmap='gray')
+    plt.show()
+    plt.imshow(signal.fftconvolve(img, kernel.detach().numpy(), mode="same"), cmap='gray')
+    plt.show()

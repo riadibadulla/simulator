@@ -21,14 +21,16 @@ class OpticalConv2d(nn.Conv2d):
                     input_channel+=1
 
     def _conv_forward(self, input: Tensor, weight: Tensor, bias: Optional[Tensor]):
+        parallel = False
         if self.padding_mode != 'zeros':
             return F.conv2d(F.pad(input, self._reversed_padding_repeated_twice, mode=self.padding_mode),
                             weight, bias, self.stride,
                             _pair(0), self.dilation, self.groups)
         self.output = torch.zeros(size=(input.size(dim=0),weight.size(dim=0),input.size(dim=2),input.size(dim=3)))
 
-        # for batch in range(input.size(dim=0)):
-            # th = threading.Thread(target=self._run_batch, args=(batch,input,weight,))
-            # th.start()
-        Parallel(n_jobs=input.size(dim=0))(delayed(self._run_batch)(batch,input,weight) for batch in range(input.size(dim=0)))
+        if parallel:
+            Parallel(n_jobs=input.size(dim=0))(delayed(self._run_batch)(batch,input,weight) for batch in range(input.size(dim=0)))
+        else:
+            for batch in range(input.size(dim=0)):
+                self._run_batch(batch,input,weight)
         return torch.tensor(self.output)

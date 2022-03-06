@@ -13,6 +13,12 @@ from torch import optim
 from tqdm import tqdm
 from OpticalConv2d import OpticalConv2d
 
+torch.cuda.empty_cache()
+import gc
+gc.collect()
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
+
 class Net(nn.Module):
     def __init__(self):
         super().__init__()
@@ -52,13 +58,14 @@ def train():
             # get the inputs; data is a list of [inputs, labels]
             net.train()
             inputs, labels = data
-            inputs, labels = inputs, labels
+            # inputs, labels = inputs.to(device), labels.to(device)
             # zero the parameter gradients
             optimizer.zero_grad()
 
             # forward + backward + optimize
             outputs = net(inputs)
             loss = criterion(outputs, labels)
+            # loss = loss.to(device)
             loss.backward()
             optimizer.step()
 
@@ -77,12 +84,16 @@ def train():
 
 
 if __name__=='__main__':
+
+    print(f"running on {device}")
+
     # test()
     train_data = MNIST('/files/', train=True, download=True, transform=transforms.ToTensor())
     train_loader = torch.utils.data.DataLoader(train_data,batch_size=4,shuffle=True,num_workers=1)
     test_data = MNIST('/files/', train=False, download=True, transform=transforms.ToTensor())
     test_loader = torch.utils.data.DataLoader(test_data, batch_size=5, shuffle=True, num_workers=1)
     net = Net()
+    # net.to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
