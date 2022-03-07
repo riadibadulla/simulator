@@ -22,10 +22,10 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 class Net(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = nn.Conv2d(1,10,3,padding="same")
+        self.conv1 = OpticalConv2d(1,10,3,padding="same")
         self.activation = nn.ReLU(inplace=True)
         self.pool = nn.MaxPool2d(2)
-        self.conv2 = OpticalConv2d(10,20,3, padding="same")
+        self.conv2 = nn.Conv2d(10,20,3, padding="same")
         self.flatten = nn.Flatten()
         self.fc = nn.Linear(980,10)
 
@@ -44,7 +44,7 @@ def train():
     best_val_loss = 10000
     best_val_acc = 0
 
-    for epoch in range(65):  # loop over the dataset multiple times
+    for epoch in range(1):  # loop over the dataset multiple times
 
         running_loss = 0.0
         running_accuarcy = 0

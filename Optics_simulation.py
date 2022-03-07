@@ -13,6 +13,7 @@ from scipy import signal
 import torch
 from torch.autograd import Variable
 import torch.nn.functional as F
+from torch.nn.modules.activation import ReLU
 
 class Filter(po.BaseOpticalElement):
 
@@ -34,12 +35,12 @@ class Optics_simulation:
 
     def __init__(self,number_of_pixels=300):
 
-        self.wavelength = 500 * u.nm
+        self.wavelength = 532 * u.nm
         self.npix = number_of_pixels
-        self.f = 6 * u.cm
-        self.pixel_scale = 10 *u.um
+        self.f = 10 * u.mm
+        self.pixel_scale = 13.78 *u.um
         self.wf = po.Wavefront(self.wavelength, self.pixel_scale, self.npix)
-        self.r = 4 * u.mm
+        self.r = 2.5 * u.mm
         self.lens = po.ThinLens(self.r, self.f)
         self.fs = po.FreeSpace(self.f)
         self.filter = Filter()
@@ -65,10 +66,6 @@ class Optics_simulation:
         self.wf.amplitude = img
         self.filter.set_filter(kernel)
         wf_imaged = self.wf * self.fs * self.lens * self.fs * self.filter * self.fs * self.lens * self.fs
-        # test_loss = wf_imaged.amplitude.mean()
-        # test_loss.backward()
-        # print(test_loss.grad_fn)
-        # quit()
         return wf_imaged.amplitude
 
     def __pad(self,large,small,padding_size):
@@ -91,14 +88,14 @@ class Optics_simulation:
         return img, kernel
 
 
-    def optConv2d(self, img,kernel,pseudo_negativity=False):
+    def optConv2d(self, img,kernel,pseudo_negativity=True):
         img, kernel = self.process_inputs(img, kernel)
         if pseudo_negativity:
-            #TODO: make it tensor
-            pos, neg = np.maximum(kernel, 0), np.maximum(kernel * (-1), 0)
+            relu = ReLU()
+            pos, neg = relu(kernel), relu(kernel * (-1))
             output_pos = self.convolution_4F(img, pos)
             output_neg = self.convolution_4F(img, neg)
-            result = output_pos - output_neg
+            result = torch.sub(output_pos,output_neg)
         else:
             #TODO: adapt size of inputs to npix
             result = self.convolution_4F(img, kernel)
@@ -107,20 +104,19 @@ class Optics_simulation:
         return output_final
 
 
-if __name__ == '__main__':
-    img = io.imread("mnist-test.jpg")
-    img = rgb2gray(img)
-    img = resize(img, (28,28),anti_aliasing=True)
-    plt.imshow(img, cmap='gray')
-    plt.show()
-    img1 = Variable(torch.tensor(img), requires_grad=True)
-    optics = Optics_simulation(img1.shape[0])
-    kernel = np.array(
-        [[1, 4, 7, 4, 1], [4, 16, 26, 16, 4], [7, 26, 41, 26, 7], [4, 16, 26, 16, 4], [1, 4, 7, 4, 1]])
-    kernel = Variable(torch.tensor(kernel, dtype=torch.float64), requires_grad=True)
-    output = optics.optConv2d(img1, kernel, False)
-    output = resize(output.detach().numpy(), (28,28),anti_aliasing=True)
-    plt.imshow(output, cmap='gray')
-    plt.show()
-    plt.imshow(signal.fftconvolve(img, kernel.detach().numpy(), mode="same"), cmap='gray')
-    plt.show()
+# if __name__ == '__main__':
+#     img = io.imread("mnist.jpg", as_gray=True)
+#     img = resize(img, (28,28),anti_aliasing=True)
+#     plt.imshow(img, cmap='gray')
+#     plt.show()
+#     img1 = Variable(torch.tensor(img), requires_grad=True)
+#     optics = Optics_simulation(img1.shape[0])
+#     kernel = np.array(
+#         [[1, 4, 7, 4, 1], [4, 16, 26, 16, 4], [7, 26, 41, 26, 7], [4, 16, 26, 16, 4], [1, 4, 7, 4, 1]])
+#     kernel = Variable(torch.tensor(kernel, dtype=torch.float64), requires_grad=True)
+#     output = optics.optConv2d(img1, kernel, True)
+#     output = resize(output.detach().numpy(), (28,28),anti_aliasing=True)
+#     plt.imshow(output, cmap='gray')
+#     plt.show()
+#     plt.imshow(signal.fftconvolve(img, kernel.detach().numpy(), mode="same"), cmap='gray')
+#     plt.show()

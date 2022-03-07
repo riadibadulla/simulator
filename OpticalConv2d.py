@@ -7,7 +7,7 @@ from typing import Optional, List, Tuple, Union
 from torch.nn.modules.utils import _single, _pair, _triple, _reverse_repeat_tuple
 from Optics_simulation import Optics_simulation
 from joblib import Parallel, delayed
-opt = Optics_simulation(14)
+opt = Optics_simulation(28)
 
 
 
@@ -21,7 +21,7 @@ class OpticalConv2d(nn.Conv2d):
                     input_channel+=1
 
     def _conv_forward(self, input: Tensor, weight: Tensor, bias: Optional[Tensor]):
-        parallel = False
+        parallel = True
         if self.padding_mode != 'zeros':
             return F.conv2d(F.pad(input, self._reversed_padding_repeated_twice, mode=self.padding_mode),
                             weight, bias, self.stride,
