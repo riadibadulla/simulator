@@ -33,4 +33,4 @@ class OpticalConv2d(nn.Conv2d):
         else:
             for batch in range(input.size(dim=0)):
                 self._run_batch(batch,input,weight)
-        return torch.tensor(self.output)
+        return self.output

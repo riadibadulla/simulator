@@ -33,12 +33,12 @@ class Filter(po.BaseOpticalElement):
 
 class Optics_simulation:
 
-    def __init__(self,number_of_pixels=300):
+    def __init__(self,number_of_pixels=28):
 
         self.wavelength = 532 * u.nm
         self.npix = number_of_pixels
         self.f = 10 * u.mm
-        self.pixel_scale = 13.78 *u.um
+        self.pixel_scale = math.sqrt(532*10**(-11)/number_of_pixels)* u.m
         self.wf = po.Wavefront(self.wavelength, self.pixel_scale, self.npix)
         self.r = 2.5 * u.mm
         self.lens = po.ThinLens(self.r, self.f)
@@ -97,16 +97,15 @@ class Optics_simulation:
             output_neg = self.convolution_4F(img, neg)
             result = torch.sub(output_pos,output_neg)
         else:
-            #TODO: adapt size of inputs to npix
             result = self.convolution_4F(img, kernel)
         result = torch.fft.fftshift(result)
         output_final = self.no_convolution_4F(result)
         return output_final
 
-
+#
 # if __name__ == '__main__':
 #     img = io.imread("mnist.jpg", as_gray=True)
-#     img = resize(img, (28,28),anti_aliasing=True)
+#     img = resize(img, (300,300),anti_aliasing=True)
 #     plt.imshow(img, cmap='gray')
 #     plt.show()
 #     img1 = Variable(torch.tensor(img), requires_grad=True)
@@ -115,8 +114,7 @@ class Optics_simulation:
 #         [[1, 4, 7, 4, 1], [4, 16, 26, 16, 4], [7, 26, 41, 26, 7], [4, 16, 26, 16, 4], [1, 4, 7, 4, 1]])
 #     kernel = Variable(torch.tensor(kernel, dtype=torch.float64), requires_grad=True)
 #     output = optics.optConv2d(img1, kernel, True)
-#     output = resize(output.detach().numpy(), (28,28),anti_aliasing=True)
-#     plt.imshow(output, cmap='gray')
+#     plt.imshow(output.detach().numpy(), cmap='gray')
 #     plt.show()
 #     plt.imshow(signal.fftconvolve(img, kernel.detach().numpy(), mode="same"), cmap='gray')
 #     plt.show()
