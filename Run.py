@@ -11,7 +11,7 @@ from torchvision.transforms import transforms
 import torch.utils.data
 from torch import optim
 from tqdm import tqdm
-from OpticalConv2d import OpticalConv2d
+from OpticalConv2d import OpticalConv2dNew
 
 torch.cuda.empty_cache()
 import gc
@@ -22,7 +22,7 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 class Net(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = OpticalConv2d(1,10,3,padding="same")
+        self.conv1 = OpticalConv2dNew(1,10,3)
         self.activation = nn.ReLU(inplace=True)
         self.pool = nn.MaxPool2d(2)
         self.conv2 = nn.Conv2d(10,20,3, padding="same")
@@ -66,7 +66,7 @@ def train():
             outputs = net(inputs)
             loss = criterion(outputs, labels)
             # loss = loss.to(device)
-            loss.backward()
+            loss.backward(retain_graph=True)
             optimizer.step()
 
             # print statistics
@@ -79,6 +79,7 @@ def train():
             del inputs, labels
             if i%20==0:
                 print(running_loss)
+                print(running_accuarcy)
         print(f'Epoch{epoch + 1}:      loss: {running_loss:.3f} accuaracy: {running_accuarcy}% ')
     print('Finished Training')
     return running_accuarcy, best_val_acc
@@ -96,6 +97,6 @@ if __name__=='__main__':
     net = Net()
     # net.to(device)
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+    optimizer = optim.SGD(net.parameters(), lr=0.0001, momentum=0.9)
 
     train()
