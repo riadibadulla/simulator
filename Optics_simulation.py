@@ -93,8 +93,10 @@ class Optics_simulation:
         if pseudo_negativity:
             relu = ReLU()
             pos, neg = relu(kernel), relu(kernel * (-1))
-            output_pos = self.convolution_4F(img, pos)
-            output_neg = self.convolution_4F(img, neg)
+            # output_pos = self.convolution_4F(img, pos)
+            # output_neg = self.convolution_4F(img, neg)
+            output_pos = torch.fft.ifft(torch.fft.fft2(img)*torch.fft.fft2(pos))
+            output_neg = torch.fft.ifft(torch.fft.fft2(img)*torch.fft.fft2(neg))
             result = torch.sub(output_pos,output_neg)
         else:
             result = self.convolution_4F(img, kernel)

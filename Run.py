@@ -77,7 +77,8 @@ def train():
                 correct += (predicted == labels).sum().item()
                 running_accuarcy = 100 * correct // total
             del inputs, labels
-
+            if i%20==0:
+                print(running_loss)
         print(f'Epoch{epoch + 1}:      loss: {running_loss:.3f} accuaracy: {running_accuarcy}% ')
     print('Finished Training')
     return running_accuarcy, best_val_acc
@@ -89,7 +90,7 @@ if __name__=='__main__':
 
     # test()
     train_data = MNIST('/files/', train=True, download=True, transform=transforms.ToTensor())
-    train_loader = torch.utils.data.DataLoader(train_data,batch_size=4,shuffle=True,num_workers=1)
+    train_loader = torch.utils.data.DataLoader(train_data,batch_size=3,shuffle=True,num_workers=1)
     test_data = MNIST('/files/', train=False, download=True, transform=transforms.ToTensor())
     test_loader = torch.utils.data.DataLoader(test_data, batch_size=5, shuffle=True, num_workers=1)
     net = Net()
