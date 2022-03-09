@@ -12,6 +12,8 @@ import torch.utils.data
 from torch import optim
 from tqdm import tqdm
 from OpticalConv2d import OpticalConv2dNew
+from torch.utils.tensorboard import SummaryWriter
+writer = SummaryWriter()
 
 torch.cuda.empty_cache()
 import gc
@@ -58,7 +60,7 @@ def train():
             # get the inputs; data is a list of [inputs, labels]
             net.train()
             inputs, labels = data
-            # inputs, labels = inputs.to(device), labels.to(device)
+            inputs, labels = inputs.to(device), labels.to(device)
             # zero the parameter gradients
             optimizer.zero_grad()
 
@@ -91,11 +93,17 @@ if __name__=='__main__':
 
     # test()
     train_data = MNIST('/files/', train=True, download=True, transform=transforms.ToTensor())
-    train_loader = torch.utils.data.DataLoader(train_data,batch_size=3,shuffle=True,num_workers=1)
+    train_loader = torch.utils.data.DataLoader(train_data,batch_size=4,shuffle=True,num_workers=1)
     test_data = MNIST('/files/', train=False, download=True, transform=transforms.ToTensor())
     test_loader = torch.utils.data.DataLoader(test_data, batch_size=5, shuffle=True, num_workers=1)
+    dataiter = iter(train_loader)
+    images, labels = dataiter.next()
     net = Net()
-    # net.to(device)
+    # writer.add_graph(net, images)
+    # writer.flush()
+    # writer.close()
+    # quit()
+    net.to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=0.0001, momentum=0.9)
 

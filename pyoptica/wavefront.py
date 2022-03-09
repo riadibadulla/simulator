@@ -3,7 +3,7 @@ import numpy as np
 from astropy.io import fits
 import torch
 from . import distribution
-
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 class Wavefront(distribution.Distribution):
     """A class representing a wavefront.
@@ -57,7 +57,7 @@ class Wavefront(distribution.Distribution):
     @u.quantity_input(wavelength=u.m, pixel_scale=u.m)
     def __init__(self, wavelength, pixel_scale, npix):
         super().__init__(wavelength, pixel_scale, npix)
-        self.wavefront = torch.ones((npix, npix), dtype=torch.complex64)
+        self.wavefront = torch.ones((npix, npix), dtype=torch.complex64).to(device)
         self.logger.debug(f"Created {self}")
 
     @property

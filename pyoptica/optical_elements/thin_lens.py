@@ -4,7 +4,7 @@ import astropy.units as u
 import numpy as np
 import torch
 from .base_optical_element import BaseOpticalElement
-
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 class ThinLens(BaseOpticalElement):
     """ A class representing a thin lens. The reasoning used to develop
@@ -45,7 +45,7 @@ class ThinLens(BaseOpticalElement):
         :rtype: numpy.array
 
         """
-        return torch.ones_like(wavefront.amplitude)
+        return torch.ones_like(wavefront.amplitude).to(device)
 
     def phase_transmittance(self, wavefront):
         r"""Calculations of phase transmittance based on eq. 5.10 in [1]:
@@ -67,7 +67,7 @@ class ThinLens(BaseOpticalElement):
             xy_squared <= self.radius ** 2, t1, 1
         )
         # TODO: maybe need to tensor entire function
-        return torch.tensor(phi)
+        return torch.tensor(phi).to(device)
 
     def _check_sampling(self, wavefront):
         """Checks if sampling of the given wavefront meets the requirement:

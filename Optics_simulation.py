@@ -14,6 +14,7 @@ import torch
 from torch.autograd import Variable
 import torch.nn.functional as F
 from torch.nn.modules.activation import ReLU
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 class Filter(po.BaseOpticalElement):
 
@@ -93,16 +94,17 @@ class Optics_simulation:
         if pseudo_negativity:
             relu = ReLU()
             pos, neg = relu(kernel), relu(kernel * (-1))
-            output_pos = self.convolution_4F(img, pos)
-            output_neg = self.convolution_4F(img, neg)
-            # output_pos = torch.fft.ifft(torch.fft.fft2(img)*torch.fft.fft2(pos))
-            # output_neg = torch.fft.ifft(torch.fft.fft2(img)*torch.fft.fft2(neg))
+
+            # output_pos = self.convolution_4F(img, pos)
+            # output_neg = self.convolution_4F(img, neg)
+            output_pos = torch.fft.ifft(torch.fft.fft2(img)*torch.fft.fft2(pos))
+            output_neg = torch.fft.ifft(torch.fft.fft2(img)*torch.fft.fft2(neg))
             result = torch.sub(output_pos,output_neg)
         else:
             result = self.convolution_4F(img, kernel)
         result = torch.fft.fftshift(result)
-        output_final = self.no_convolution_4F(result)
-        return output_final
+        # result = self.no_convolution_4F(result)
+        return result
 
 
 if __name__ == '__main__':

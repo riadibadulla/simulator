@@ -9,6 +9,7 @@ from Optics_simulation import Optics_simulation
 from joblib import Parallel, delayed
 opt = Optics_simulation(28)
 import math
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 class OpticalConv2d(nn.Conv2d):
     #TODO: Replace this class. Extend nn.Module like in https://auro-227.medium.com/writing-a-custom-layer-in-pytorch-14ab6ac94b77
@@ -46,7 +47,7 @@ class OpticalConv2dNew(nn.Module):
         nn.init.kaiming_uniform_(self.kernel, a=math.sqrt(5))
 
     def forward(self,input):
-        output = torch.zeros(size=(input.size(dim=0), self.kernel.size(dim=0), input.size(dim=2), input.size(dim=3)))
+        output = torch.zeros(size=(input.size(dim=0), self.kernel.size(dim=0), input.size(dim=2), input.size(dim=3))).to(device)
         for batch in range(input.size(dim=0)):
             for output_channel in range(output.shape[1]):
                 for image in input[batch, :, :, :]:

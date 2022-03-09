@@ -5,6 +5,7 @@ from .base_optical_element import BaseOpticalElement
 from .. import utils
 from ..wavefront import Wavefront
 import torch
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 class FreeSpace(BaseOpticalElement):
     """ A class representing an free space for propagation.
@@ -193,7 +194,7 @@ class FreeSpace(BaseOpticalElement):
         :return: distribution of phase transmittance resulting from the free space.
         :rtype: numpy.array
         """
-        H = torch.zeros_like(wavefront.wavefront)
+        H = torch.zeros_like(wavefront.wavefront).to(device)
         pix_scale_m = wavefront.pixel_scale.to(u.m).value
         wavelen_m = wavefront.wavelength.to(u.m).value
         distance_m = self.distance.to(u.m).value
@@ -212,4 +213,4 @@ class FreeSpace(BaseOpticalElement):
             # H = np.exp(exp_1 + exp_2)
             #TODO: may need to edit ks and xys to be tensor from the begining
             H = torch.exp(torch.tensor(exp_1) + torch.tensor(exp_2))
-        return utils.ifft(H)
+        return utils.ifft(H).to(device)
