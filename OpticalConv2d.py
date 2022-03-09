@@ -37,13 +37,6 @@ class OpticalConv2d(nn.Conv2d):
 
 class OpticalConv2dNew(nn.Module):
 
-    def _run_batch(self, batch,input,weight):
-        for output_channel in range(self.output.shape[1]):
-                for image in input[batch,:,:,:]:
-                    input_channel = 0
-                    self.output[batch,output_channel,:,:] = self.output[batch,output_channel,:,:] + opt.optConv2d(image,weight[output_channel,input_channel,:,:])
-                    input_channel+=1
-
     def __init__(self,input_channels,output_channels,kernel_size):
         super().__init__()
         self.input_channels, self.output_channels = input_channels, output_channels
@@ -53,7 +46,7 @@ class OpticalConv2dNew(nn.Module):
         nn.init.kaiming_uniform_(self.kernel, a=math.sqrt(5))
 
     def forward(self,input):
-        output = torch.empty(size=(input.size(dim=0), self.kernel.size(dim=0), input.size(dim=2), input.size(dim=3)))
+        output = torch.zeros(size=(input.size(dim=0), self.kernel.size(dim=0), input.size(dim=2), input.size(dim=3)))
         for batch in range(input.size(dim=0)):
             for output_channel in range(output.shape[1]):
                 for image in input[batch, :, :, :]:
