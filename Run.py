@@ -27,7 +27,8 @@ class Net(nn.Module):
         self.conv1 = OpticalConv2dNew(1,10,3,28)
         self.activation = nn.ReLU(inplace=True)
         self.pool = nn.MaxPool2d(2)
-        self.conv2 = nn.Conv2d(10,20,3, padding="same")
+        self.conv2 = OpticalConv2dNew(10, 20, 3, 14)
+        # self.conv2 = nn.Conv2d(10,20,3, padding="same")
         self.flatten = nn.Flatten()
         self.fc = nn.Linear(980,10)
 

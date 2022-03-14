@@ -14,7 +14,7 @@ class OpticalConv2dNew(nn.Module):
 
     def __init__(self,input_channels,output_channels,kernel_size,input_size):
         super().__init__()
-        self.opt = Optics_simulation(28)
+        self.opt = Optics_simulation(input_size)
         self.input_channels, self.output_channels = input_channels, output_channels
         self.kernel_size = kernel_size
         kernel = torch.Tensor(output_channels,input_channels,kernel_size,kernel_size)
