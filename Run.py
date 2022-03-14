@@ -24,7 +24,7 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 class Net(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = OpticalConv2dNew(1,10,3)
+        self.conv1 = OpticalConv2dNew(1,10,3,28)
         self.activation = nn.ReLU(inplace=True)
         self.pool = nn.MaxPool2d(2)
         self.conv2 = nn.Conv2d(10,20,3, padding="same")
