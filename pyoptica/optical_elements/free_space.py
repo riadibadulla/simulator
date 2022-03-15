@@ -30,13 +30,17 @@ class FreeSpace(BaseOpticalElement):
     """
     METHODS = ['ASPW']  # , 'Fresnel', 'Fraunhofer']
 
-    def __init__(self, distance, method='ASPW'):
+    def __init__(self, distance, method='ASPW',wavefront=None):
 
         if method not in self.METHODS:
             raise ValueError(f"Valid methods are: {self.METHODS}")
 
         self.distance = distance
         self.method = method
+        if wavefront:
+            self.phase_transmittance_precalculated = self.phase_transmittance(wavefront)
+        else:
+            self.phase_transmittance_precalculated = None
 
     def __mul__(self, wavefront):
         return self.propagate(wavefront)
@@ -164,8 +168,10 @@ class FreeSpace(BaseOpticalElement):
         """
         propagated_wf = Wavefront(wavefront.wavelength, wavefront.pixel_scale, wavefront.npix)
         steps_number, step_size = self.calc_propagation_steps(wavefront)
-        h = FreeSpace(step_size, method=self.method).phase_transmittance(wavefront)
-        H = utils.fft(h)
+        if self.phase_transmittance_precalculated!=None:
+            H = self.phase_transmittance_precalculated
+        else:
+            H = FreeSpace(step_size, method=self.method).phase_transmittance(wavefront)
         wf_at_distance = utils.fft(wavefront.wavefront)
         for _ in range(steps_number):
             wf_at_distance = wf_at_distance * H
@@ -213,4 +219,4 @@ class FreeSpace(BaseOpticalElement):
             # H = np.exp(exp_1 + exp_2)
             #TODO: may need to edit ks and xys to be tensor from the begining
             H = torch.exp(torch.tensor(exp_1) + torch.tensor(exp_2))
-        return utils.ifft(H).to(device)
+        return H.to(device)
