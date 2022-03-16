@@ -24,10 +24,10 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 class Net(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = OpticalConv2dNew(1,10,3,28)
+        self.conv1 = OpticalConv2dNew(1,10,3)
         self.activation = nn.ReLU(inplace=True)
         self.pool = nn.MaxPool2d(2)
-        self.conv2 = OpticalConv2dNew(10, 20, 3, 14)
+        self.conv2 = OpticalConv2dNew(10, 20, 3)
         # self.conv2 = nn.Conv2d(10,20,3, padding="same")
         self.flatten = nn.Flatten()
         self.fc = nn.Linear(980,10)
@@ -75,14 +75,15 @@ def train():
             # print statistics
             with torch.no_grad():
                 running_loss = loss.item()
-                _, predicted = torch.max(outputs.data, 1)
+                _, predicted = torch.max(outputs.detach().cpu().data, 1)
                 total += labels.size(0)
-                correct += (predicted == labels).sum().item()
+                correct += (predicted == labels.detach().cpu()).sum().item()
                 running_accuarcy = 100 * correct // total
-            del inputs, labels
+            del inputs, labels, loss, outputs
             if i%20==0:
                 print(running_loss)
                 print(running_accuarcy)
+            torch.cuda.empty_cache()
         print(f'Epoch{epoch + 1}:      loss: {running_loss:.3f} accuaracy: {running_accuarcy}% ')
     print('Finished Training')
     return running_accuarcy, best_val_acc
@@ -94,9 +95,9 @@ if __name__=='__main__':
 
     # test()
     train_data = MNIST('/files/', train=True, download=True, transform=transforms.ToTensor())
-    train_loader = torch.utils.data.DataLoader(train_data,batch_size=4,shuffle=True,num_workers=1)
+    train_loader = torch.utils.data.DataLoader(train_data,batch_size=4,shuffle=True,num_workers=0)
     test_data = MNIST('/files/', train=False, download=True, transform=transforms.ToTensor())
-    test_loader = torch.utils.data.DataLoader(test_data, batch_size=5, shuffle=True, num_workers=1)
+    test_loader = torch.utils.data.DataLoader(test_data, batch_size=5, shuffle=True, num_workers=0)
     dataiter = iter(train_loader)
     images, labels = dataiter.next()
     net = Net()

@@ -107,18 +107,18 @@ class Optics_simulation:
         return result
 
 
-if __name__ == '__main__':
-    img = io.imread("mnist-test.jpg", as_gray=True)
-    img = resize(img, (28,28),anti_aliasing=True)/255
-    plt.imshow(img, cmap='gray')
-    plt.show()
-    img1 = Variable(torch.tensor(img), requires_grad=True).to(device)
-    optics = Optics_simulation(img1.shape[0])
-    kernel = np.array(
-        [[1, 4, 7, 4, 1], [4, 16, 26, 16, 4], [7, 26, 41, 26, 7], [4, 16, 26, 16, 4], [1, 4, 7, 4, 1]])/26
-    kernel = Variable(torch.tensor(kernel, dtype=torch.float64), requires_grad=True).to(device)
-    output = optics.optConv2d(img1, kernel, True)
-    plt.imshow(output.cpu().detach().numpy(), cmap='gray')
-    plt.show()
-    plt.imshow(signal.correlate(img, kernel.cpu().detach().numpy(), mode="same"), cmap='gray')
-    plt.show()
+# if __name__ == '__main__':
+#     img = io.imread("mnist-test.jpg", as_gray=True)
+#     img = resize(img, (28,28),anti_aliasing=True)/255
+#     plt.imshow(img, cmap='gray')
+#     plt.show()
+#     img1 = Variable(torch.tensor(img), requires_grad=True).to(device)
+#     optics = Optics_simulation(img1.shape[0])
+#     kernel = np.array(
+#         [[1, 4, 7, 4, 1], [4, 16, 26, 16, 4], [7, 26, 41, 26, 7], [4, 16, 26, 16, 4], [1, 4, 7, 4, 1]])/26
+#     kernel = Variable(torch.tensor(kernel, dtype=torch.float64), requires_grad=True).to(device)
+#     output = optics.optConv2d(img1, kernel, True)
+#     plt.imshow(output.cpu().detach().numpy(), cmap='gray')
+#     plt.show()
+#     plt.imshow(signal.correlate(img, kernel.cpu().detach().numpy(), mode="same"), cmap='gray')
+#     plt.show()
