@@ -32,9 +32,10 @@ class ThinLens(BaseOpticalElement):
     """
 
     @u.quantity_input(radius=u.m, f=u.m)
-    def __init__(self, radius, f):
+    def __init__(self, radius, f, wavefront):
         self.radius = radius
         self.f = f
+        self.phase_transmittance_precalculated = self.set_phase_transmittance(wavefront)
 
     def amplitude_transmittance(self, wavefront):
         """In the thin lens approximation amplitude is fully transmitted.
@@ -47,18 +48,18 @@ class ThinLens(BaseOpticalElement):
         """
         return torch.ones_like(wavefront.amplitude).to(device)
 
-    def phase_transmittance(self, wavefront):
+    def set_phase_transmittance(self, wavefront):
         r"""Calculations of phase transmittance based on eq. 5.10 in [1]:
 
-        :math:`t_{l}(x, y)=\exp \left[-j \frac{k}{2 f}\left(x^{2}+y^{2}\right)\right]`
+                :math:`t_{l}(x, y)=\exp \left[-j \frac{k}{2 f}\left(x^{2}+y^{2}\right)\right]`
 
-        :param wavefront: The wavefront which interacts with the lens
-        :type wavefront: pyoptica.Wavefront
-        :return: distribution of phase transmittance resulting from the lens
-        :rtype: numpy.array
+                :param wavefront: The wavefront which interacts with the lens
+                :type wavefront: pyoptica.Wavefront
+                :return: distribution of phase transmittance resulting from the lens
+                :rtype: numpy.array
 
-        """
-        self._check_sampling(wavefront)
+                """
+        # self._check_sampling(wavefront)
         k = wavefront.k
         x, y = wavefront.x, wavefront.y
         xy_squared = x ** 2 + y ** 2
@@ -68,6 +69,9 @@ class ThinLens(BaseOpticalElement):
         )
         # TODO: maybe need to tensor entire function
         return torch.tensor(phi).to(device)
+
+    def phase_transmittance(self, wavefront):
+        return self.phase_transmittance_precalculated
 
     def _check_sampling(self, wavefront):
         """Checks if sampling of the given wavefront meets the requirement:
