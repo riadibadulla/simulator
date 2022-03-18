@@ -167,14 +167,11 @@ class FreeSpace(BaseOpticalElement):
 
         """
         propagated_wf = Wavefront(wavefront.wavelength, wavefront.pixel_scale, wavefront.npix)
-        steps_number, step_size = self.calc_propagation_steps(wavefront)
-        if self.phase_transmittance_precalculated!=None:
-            H = self.phase_transmittance_precalculated
-        else:
-            H = FreeSpace(step_size, method=self.method).phase_transmittance(wavefront)
+        # steps_number, step_size = self.calc_propagation_steps(wavefront)
         wf_at_distance = utils.fft(wavefront.wavefront)
-        for _ in range(steps_number):
-            wf_at_distance = wf_at_distance * H
+        #TODO: test when larger number of steps required
+        # for _ in range(steps_number):
+        wf_at_distance = wf_at_distance * self.phase_transmittance_precalculated
         wf_at_distance = utils.ifft(wf_at_distance)
         propagated_wf.wavefront = wf_at_distance
         # self.logger.info(
