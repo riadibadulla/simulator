@@ -15,6 +15,7 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 from torch.nn.modules.activation import ReLU
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+from torchvision.transforms.functional import rotate
 
 class Filter(po.BaseOpticalElement):
 
@@ -42,7 +43,7 @@ class Optics_simulation:
         self.pixel_scale = math.sqrt(532*10**(-11)/number_of_pixels)* u.m
         self.wf = po.Wavefront(self.wavelength, self.pixel_scale, self.npix)
         self.r = 2.5 * u.mm
-        self.lens = po.ThinLens(self.r, self.f)
+        self.lens = po.ThinLens(self.r, self.f, wavefront=self.wf)
         self.fs = po.FreeSpace(self.f,wavefront=self.wf)
         self.filter = Filter()
 
@@ -103,22 +104,23 @@ class Optics_simulation:
         else:
             result = self.convolution_4F(img, kernel)
         result = torch.fft.fftshift(result)
-        result = self.no_convolution_4F(result)
+        # result = self.no_convolution_4F(result)
+        result = torch.rot90(torch.rot90(result))
         return result
 
 
-# if __name__ == '__main__':
-#     img = io.imread("mnist-test.jpg", as_gray=True)
-#     img = resize(img, (28,28),anti_aliasing=True)/255
-#     plt.imshow(img, cmap='gray')
-#     plt.show()
-#     img1 = Variable(torch.tensor(img), requires_grad=True).to(device)
-#     optics = Optics_simulation(img1.shape[0])
-#     kernel = np.array(
-#         [[1, 4, 7, 4, 1], [4, 16, 26, 16, 4], [7, 26, 41, 26, 7], [4, 16, 26, 16, 4], [1, 4, 7, 4, 1]])/26
-#     kernel = Variable(torch.tensor(kernel, dtype=torch.float64), requires_grad=True).to(device)
-#     output = optics.optConv2d(img1, kernel, True)
-#     plt.imshow(output.cpu().detach().numpy(), cmap='gray')
-#     plt.show()
-#     plt.imshow(signal.correlate(img, kernel.cpu().detach().numpy(), mode="same"), cmap='gray')
-#     plt.show()
+if __name__ == '__main__':
+    img = io.imread("mnist.jpg", as_gray=True)
+    img = resize(img, (28,28),anti_aliasing=True)/255
+    plt.imshow(img, cmap='gray')
+    plt.show()
+    img1 = Variable(torch.tensor(img), requires_grad=True).to(device)
+    optics = Optics_simulation(img1.shape[0])
+    kernel = np.array(
+        [[1, 4, 7, 4, 1], [4, 16, 26, 16, 4], [7, 26, 41, 26, 7], [4, 16, 26, 16, 4], [1, 4, 7, 4, 1]])/26
+    kernel = Variable(torch.tensor(kernel, dtype=torch.float64), requires_grad=True).to(device)
+    output = optics.optConv2d(img1, kernel, True)
+    plt.imshow(output.cpu().detach().numpy(), cmap='gray')
+    plt.show()
+    plt.imshow(signal.correlate(img, kernel.cpu().detach().numpy(), mode="same"), cmap='gray')
+    plt.show()
