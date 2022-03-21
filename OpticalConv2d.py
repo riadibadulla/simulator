@@ -12,13 +12,14 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 class OpticalConv2dNew(nn.Module):
 
-    def __init__(self,input_channels,output_channels,kernel_size):
+    def __init__(self,input_channels,output_channels,kernel_size,pseudo_negativity=False):
         super().__init__()
+        self.pseudo_negativity = pseudo_negativity
         self.input_channels, self.output_channels = input_channels, output_channels
         self.kernel_size = kernel_size
         kernel = torch.Tensor(output_channels,input_channels,kernel_size,kernel_size)
         self.kernel = nn.Parameter(kernel)
-        nn.init.kaiming_uniform_(self.kernel, a=math.sqrt(5))
+        nn.init.kaiming_uniform_(self.kernel)
 
     def forward(self,input):
         opt = Optics_simulation(input.shape[2])
@@ -28,7 +29,7 @@ class OpticalConv2dNew(nn.Module):
                 for image in input[batch, :, :, :]:
                     input_channel = 0
                     output[batch, output_channel, :, :] = output[batch, output_channel, :, :] + opt.optConv2d(
-                        image, self.kernel[output_channel, input_channel, :, :])
+                        image, self.kernel[output_channel, input_channel, :, :], pseudo_negativity=self.pseudo_negativity)
                     input_channel += 1
         del opt
         return output

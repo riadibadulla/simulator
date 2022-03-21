@@ -80,7 +80,7 @@ def train():
                 correct += (predicted == labels.detach().cpu()).sum().item()
                 running_accuarcy = 100 * correct // total
             del inputs, labels, loss, outputs
-            if i%20==0:
+            if i%5==0:
                 print(running_loss)
                 print(running_accuarcy)
             torch.cuda.empty_cache()
@@ -104,6 +104,7 @@ if __name__=='__main__':
     # writer.add_graph(net, images)
     # writer.flush()
     # writer.close()
+    # quit()
     net.to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=0.0001, momentum=0.9)

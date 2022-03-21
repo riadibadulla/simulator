@@ -92,7 +92,7 @@ class Optics_simulation:
         return img, kernel
 
 
-    def optConv2d(self, img,kernel,pseudo_negativity=True):
+    def optConv2d(self, img,kernel,pseudo_negativity=False):
         img, kernel = self.process_inputs(img, kernel)
         if pseudo_negativity:
             relu = ReLU()
@@ -106,7 +106,7 @@ class Optics_simulation:
         else:
             result = self.convolution_4F(img, kernel)
         result = torch.fft.fftshift(result)
-        result = self.no_convolution_4F(result)
+        # result = self.no_convolution_4F(result)
         return result
 
 
