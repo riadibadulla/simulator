@@ -30,8 +30,10 @@ class Filter(po.BaseOpticalElement):
         return self.filter
 
     def phase_transmittance(self, wavefront):
-        #TODO: may need to edit phase getter
         return torch.ones_like(wavefront.phase)
+
+    def transmittance(self, wavefront):
+        return self.filter
 
 class Optics_simulation:
 
@@ -104,8 +106,7 @@ class Optics_simulation:
         else:
             result = self.convolution_4F(img, kernel)
         result = torch.fft.fftshift(result)
-        # result = self.no_convolution_4F(result)
-        result = torch.rot90(torch.rot90(result))
+        result = self.no_convolution_4F(result)
         return result
 
 

@@ -1,5 +1,5 @@
 import abc
-
+import torch
 from .. import logging
 from ..wavefront import Wavefront
 
@@ -25,7 +25,8 @@ class BaseOpticalElement(logging.LoggerMixin, abc.ABC):
         """Produces transmittance of the optical element"""
         t_amplitude = self.amplitude_transmittance(wavefront)
         t_phase = self.phase_transmittance(wavefront)
-        t = t_amplitude * t_phase
+        # t = t_amplitude * t_phase
+        t = t_phase
         return t
 
     def __mul__(self, wavefront):
