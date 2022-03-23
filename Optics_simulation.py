@@ -1,76 +1,76 @@
 import math
 
-import astropy.units as u
 import numpy as np
-import pyoptica as po
 from matplotlib import pyplot as plt
-import seaborn as sns
-from torch import tensor
 from skimage import io
 from skimage.transform import rescale, resize, downscale_local_mean
-from skimage.color import rgb2gray
 from scipy import signal
 import torch
 from torch.autograd import Variable
 import torch.nn.functional as F
 from torch.nn.modules.activation import ReLU
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-from torchvision.transforms.functional import rotate
-
-class Filter(po.BaseOpticalElement):
-
-    def __init__(self, filter=None):
-        if filter:
-            self.filter = torch.fft.fftshift(torch.fft.fft2(filter))
-
-    def set_filter(self,filter):
-        self.filter = torch.fft.fftshift(torch.fft.fft2(filter))
-
-    def amplitude_transmittance(self, wavefront):
-        return self.filter
-
-    def phase_transmittance(self, wavefront):
-        return torch.ones_like(wavefront.phase)
-
-    def transmittance(self, wavefront):
-        return self.filter
+import utils
 
 class Optics_simulation:
 
     def __init__(self,number_of_pixels=28):
 
-        self.wavelength = 532 * u.nm
+        self.wavelength = 532 * 10**(-9)
         self.npix = number_of_pixels
-        self.f = 10 * u.mm
-        self.pixel_scale = math.sqrt(532*10**(-11)/number_of_pixels)* u.m
-        self.wf = po.Wavefront(self.wavelength, self.pixel_scale, self.npix)
-        self.r = 2.5 * u.mm
-        self.lens = po.ThinLens(self.r, self.f, wavefront=self.wf)
-        self.fs = po.FreeSpace(self.f,wavefront=self.wf)
-        self.filter = Filter()
+        self.f = 10 * 10**(-3)
+        self.pixel_scale = math.sqrt(532*10**(-11)/number_of_pixels)
+        self.r = 2.5 * 10**(-3)
+        self.H = self.calc_phase_transmittance_freespace()
+        self.H_lens = self.calc_phase_transmittance_freespace_lens()
 
-    def plot_wavefront(self, wavefront, amplitude):
-        # fig = wavefront.plot(amplitude=amplitude, fig_options=dict(figsize=(5, 5), dpi=130))
-        # fig[0].show()
-        plt.imshow(wavefront.amplitude)
-        plt.show()
 
-    def make_4F_engine(self, waveform):
-        waveform * self.fs * self.lens * self.fs * self.fs * self.lens * self.fs
+    def calc_phase_transmittance_freespace_lens(self):
+        k = np.pi * 2.0 / self.wavelength
+        x, y = utils.mesh_grid(self.npix, self.pixel_scale)
+        xy_squared = x ** 2 + y ** 2
+        t1 = np.exp(-(1.j * k) / (2 * self.f) * xy_squared)
+        phi = np.where(
+            xy_squared <= self.r ** 2, t1, 1
+        )
+        # TODO: maybe need to tensor entire function
+        return torch.tensor(phi).to(device)
 
-    def make_fourier_engine(self, waveform):
-        return waveform * self.fs * self.lens * self.fs
+    def calc_phase_transmittance_freespace(self):
+        H = torch.zeros(self.npix,self.npix).to(device)
+        x, y = utils.mesh_grid(self.npix, self.pixel_scale)
+        f_x = (x / (self.pixel_scale ** 2 * self.npix))
+        f_y = (y / (self.pixel_scale ** 2 * self.npix))
+        k = np.pi * 2.0 / self.wavelength
 
-    def no_convolution_4F(self, img):
-        self.wf.amplitude = img
-        wf_imaged = self.wf * self.fs * self.lens * self.fs * self.fs * self.lens * self.fs
-        return wf_imaged.amplitude
+        rhosqr = f_x ** 2 + f_y ** 2
+        exp_1 = 1.j * k * self.f
+        exp_2 = -1.j * np.pi * self.wavelength * self.f * rhosqr
+        # H = np.exp(exp_1 + exp_2)
+        #TODO: may need to edit ks and xys to be tensor from the begining
+        H = torch.exp(torch.tensor(exp_1).to(device) + torch.tensor(exp_2).to(device))
+        return H
+
+    def propagate_through_freespace(self, wavefront):
+        wf_at_distance = utils.fft(wavefront)
+        wf_at_distance = wf_at_distance * self.H
+        wf_at_distance = utils.ifft(wf_at_distance)
+        return wf_at_distance
 
     def convolution_4F(self, img, kernel):
-        self.wf.amplitude = img
-        self.filter.set_filter(kernel)
-        wf_imaged = self.wf * self.fs * self.lens * self.fs * self.filter * self.fs * self.lens * self.fs
-        return wf_imaged.amplitude
+        wavefront = torch.ones((self.npix, self.npix), dtype=torch.complex64).to(device)
+
+        #modulated the amplitude
+        wavefront = img * torch.exp(1.j * torch.angle(wavefront))
+        wavefront_1F = self.propagate_through_freespace(wavefront)
+        wavefront_1Lens = wavefront_1F*self.H_lens
+        wavefront_2F = self.propagate_through_freespace(wavefront_1Lens)
+        filter =  torch.fft.fftshift(torch.fft.fft2(kernel))
+        wavefront_filtered = wavefront_2F * filter
+        wavefront_3F = self.propagate_through_freespace(wavefront_filtered)
+        wavefront_2Lens = wavefront_3F*self.H_lens
+        wavefront_4F = self.propagate_through_freespace(wavefront_2Lens)
+        return torch.abs(wavefront_4F)
 
     def __pad(self,large,small,padding_size):
         small = torch.nn.functional.pad(small, (padding_size,padding_size,padding_size,padding_size))
@@ -109,19 +109,18 @@ class Optics_simulation:
         # result = self.no_convolution_4F(result)
         return result
 
-
-# if __name__ == '__main__':
-#     img = io.imread("mnist.jpg", as_gray=True)
-#     img = resize(img, (28,28),anti_aliasing=True)/255
-#     plt.imshow(img, cmap='gray')
-#     plt.show()
-#     img1 = Variable(torch.tensor(img), requires_grad=True).to(device)
-#     optics = Optics_simulation(img1.shape[0])
-#     kernel = np.array(
-#         [[1, 4, 7, 4, 1], [4, 16, 26, 16, 4], [7, 26, 41, 26, 7], [4, 16, 26, 16, 4], [1, 4, 7, 4, 1]])/26
-#     kernel = Variable(torch.tensor(kernel, dtype=torch.float64), requires_grad=True).to(device)
-#     output = optics.optConv2d(img1, kernel, True)
-#     plt.imshow(output.cpu().detach().numpy(), cmap='gray')
-#     plt.show()
-#     plt.imshow(signal.correlate(img, kernel.cpu().detach().numpy(), mode="same"), cmap='gray')
-#     plt.show()
+if __name__ == '__main__':
+    img = io.imread("mnist.jpg", as_gray=True)
+    img = resize(img, (28,28),anti_aliasing=True)/255
+    plt.imshow(img, cmap='gray')
+    plt.show()
+    img1 = Variable(torch.tensor(img), requires_grad=True).to(device)
+    optics = Optics_simulation(img1.shape[0])
+    kernel = np.array(
+        [[1, 4, 7, 4, 1], [4, 16, 26, 16, 4], [7, 26, 41, 26, 7], [4, 16, 26, 16, 4], [1, 4, 7, 4, 1]])/26
+    kernel = Variable(torch.tensor(kernel, dtype=torch.float64), requires_grad=True).to(device)
+    output = optics.optConv2d(img1, kernel, True)
+    plt.imshow(output.cpu().detach().numpy(), cmap='gray')
+    plt.show()
+    plt.imshow(signal.correlate(img, kernel.cpu().detach().numpy(), mode="same"), cmap='gray')
+    plt.show()
