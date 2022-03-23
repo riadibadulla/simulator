@@ -1,10 +1,3 @@
-from Optics_simulation import Optics_simulation
-from matplotlib import pyplot as plt
-import numpy as np
-from scipy import signal
-from skimage import io
-from skimage.color import rgb2gray
-import seaborn as sns
 from torch import nn
 from torchvision.datasets import MNIST
 from torchvision.transforms import transforms
@@ -24,10 +17,10 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 class Net(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = OpticalConv2dNew(1,10,3)
+        self.conv1 = OpticalConv2dNew(1,10,3,input_size=28)
         self.activation = nn.ReLU(inplace=True)
         self.pool = nn.MaxPool2d(2)
-        self.conv2 = OpticalConv2dNew(10, 20, 3)
+        self.conv2 = OpticalConv2dNew(10, 20, 3,input_size=14)
         # self.conv2 = nn.Conv2d(10,20,3, padding="same")
         self.flatten = nn.Flatten()
         self.fc = nn.Linear(980,10)

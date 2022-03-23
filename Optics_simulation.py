@@ -40,6 +40,7 @@ class Optics_simulation:
     def calc_phase_transmittance_freespace(self):
         H = torch.zeros(self.npix,self.npix).to(device)
         x, y = utils.mesh_grid(self.npix, self.pixel_scale)
+        x, y = torch.tensor(x).to(device), torch.tensor(y).to(device)
         f_x = (x / (self.pixel_scale ** 2 * self.npix))
         f_y = (y / (self.pixel_scale ** 2 * self.npix))
         k = np.pi * 2.0 / self.wavelength
@@ -47,9 +48,8 @@ class Optics_simulation:
         rhosqr = f_x ** 2 + f_y ** 2
         exp_1 = 1.j * k * self.f
         exp_2 = -1.j * np.pi * self.wavelength * self.f * rhosqr
-        # H = np.exp(exp_1 + exp_2)
         #TODO: may need to edit ks and xys to be tensor from the begining
-        H = torch.exp(torch.tensor(exp_1).to(device) + torch.tensor(exp_2).to(device))
+        H = torch.exp(exp_1 + exp_2)
         return H
 
     def propagate_through_freespace(self, wavefront):
