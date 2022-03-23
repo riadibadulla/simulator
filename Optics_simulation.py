@@ -28,13 +28,14 @@ class Optics_simulation:
     def calc_phase_transmittance_freespace_lens(self):
         k = np.pi * 2.0 / self.wavelength
         x, y = utils.mesh_grid(self.npix, self.pixel_scale)
+        x, y = torch.tensor(x).to(device), torch.tensor(y).to(device)
         xy_squared = x ** 2 + y ** 2
-        t1 = np.exp(-(1.j * k) / (2 * self.f) * xy_squared)
-        phi = np.where(
-            xy_squared <= self.r ** 2, t1, 1
-        )
+        t1 = torch.exp(-(1.j * k) / (2 * self.f) * xy_squared)
+        phi = torch.where(
+            xy_squared <= self.r ** 2, t1, 1+0.j
+        ).to(device)
         # TODO: maybe need to tensor entire function
-        return torch.tensor(phi).to(device)
+        return phi
 
     def calc_phase_transmittance_freespace(self):
         H = torch.zeros(self.npix,self.npix).to(device)
@@ -58,15 +59,11 @@ class Optics_simulation:
         return wf_at_distance
 
     def convolution_4F(self, img, kernel):
-        wavefront = torch.ones((self.npix, self.npix), dtype=torch.complex64).to(device)
-
-        #modulated the amplitude
-        wavefront = img * torch.exp(1.j * torch.angle(wavefront))
+        wavefront = img * torch.exp(1.j * torch.zeros(size=(self.npix,self.npix)).to(device))
         wavefront_1F = self.propagate_through_freespace(wavefront)
         wavefront_1Lens = wavefront_1F*self.H_lens
         wavefront_2F = self.propagate_through_freespace(wavefront_1Lens)
-        filter =  torch.fft.fftshift(torch.fft.fft2(kernel))
-        wavefront_filtered = wavefront_2F * filter
+        wavefront_filtered = wavefront_2F * torch.fft.fftshift(torch.fft.fft2(kernel))
         wavefront_3F = self.propagate_through_freespace(wavefront_filtered)
         wavefront_2Lens = wavefront_3F*self.H_lens
         wavefront_4F = self.propagate_through_freespace(wavefront_2Lens)
@@ -106,11 +103,10 @@ class Optics_simulation:
         else:
             result = self.convolution_4F(img, kernel)
         result = torch.fft.fftshift(result)
-        # result = self.no_convolution_4F(result)
         return result
 
 if __name__ == '__main__':
-    img = io.imread("mnist.jpg", as_gray=True)
+    img = io.imread("mnist-test.jpg", as_gray=True)
     img = resize(img, (28,28),anti_aliasing=True)/255
     plt.imshow(img, cmap='gray')
     plt.show()
