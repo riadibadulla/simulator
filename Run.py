@@ -5,8 +5,6 @@ import torch.utils.data
 from torch import optim
 from tqdm import tqdm
 from OpticalConv2d import OpticalConv2dNew
-from torch.utils.tensorboard import SummaryWriter
-writer = SummaryWriter()
 
 torch.cuda.empty_cache()
 import gc
@@ -94,10 +92,6 @@ if __name__=='__main__':
     dataiter = iter(train_loader)
     images, labels = dataiter.next()
     net = Net()
-    # writer.add_graph(net, images)
-    # writer.flush()
-    # writer.close()
-    # quit()
     net.to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=0.0001, momentum=0.9)
