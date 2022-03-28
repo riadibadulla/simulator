@@ -1,16 +1,23 @@
 import math
+import random
 
 import numpy as np
-# from matplotlib import pyplot as plt
-# from skimage import io
-# from skimage.transform import rescale, resize, downscale_local_mean
-# from scipy import signal
+from matplotlib import pyplot as plt
+from skimage import io
+from skimage.transform import rescale, resize, downscale_local_mean
+import seaborn as sns
+from scipy import signal
 import torch
-# from torch.autograd import Variable
+from torch.autograd import Variable
 import torch.nn.functional as F
 from torch.nn.modules.activation import ReLU
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 import utils
+from matplotlib.colors import LinearSegmentedColormap
+colors = [(0, 0, 0), (0, 1, 0)]
+cmap_name = 'my_list'
+cmap = LinearSegmentedColormap.from_list(cmap_name, colors, N=150)
+
 
 class Optics_simulation:
 
@@ -57,7 +64,14 @@ class Optics_simulation:
         wf_at_distance = utils.ifft(wf_at_distance)
         return wf_at_distance
 
+    def plot_wavefront(self, wavefront, vmax=None):
+        plt.imshow(torch.abs(wavefront).cpu().detach().numpy(), cmap=cmap, vmax=vmax)
+        plt.axis("off")
+        plt.savefig(str(random.randint(1,50))+"test.png", bbox_inches='tight')
+        plt.show()
+
     def convolution_4F(self, img, kernel):
+
         wavefront = img * torch.exp(1.j * torch.zeros(size=(self.npix,self.npix)).to(device))
         wavefront_1F = self.propagate_through_freespace(wavefront)
         wavefront_1Lens = wavefront_1F*self.H_lens
@@ -66,6 +80,15 @@ class Optics_simulation:
         wavefront_3F = self.propagate_through_freespace(wavefront_filtered)
         wavefront_2Lens = wavefront_3F*self.H_lens
         wavefront_4F = self.propagate_through_freespace(wavefront_2Lens)
+        # self.plot_wavefront(wavefront)
+        # self.plot_wavefront(wavefront_1F)
+        # self.plot_wavefront(wavefront_1Lens)
+        # self.plot_wavefront(wavefront_2F, vmax=0.0025)
+        # self.plot_wavefront(wavefront_filtered, vmax=0.0025)
+        # self.plot_wavefront(torch.fft.ifftshift(wavefront_3F))
+        # self.plot_wavefront(torch.fft.ifftshift(wavefront_2Lens))
+        # self.plot_wavefront(torch.fft.ifftshift(wavefront_4F))
+        # self.plot_wavefront(torch.fft.fftshift(torch.fft.fft2(kernel)))
         return torch.abs(wavefront_4F)
 
     def __pad(self,large,small,padding_size):
@@ -104,18 +127,26 @@ class Optics_simulation:
         result = torch.fft.fftshift(result)
         return result
 
-# if __name__ == '__main__':
-#     img = io.imread("mnist-test.jpg", as_gray=True)
-#     img = resize(img, (28,28),anti_aliasing=True)/255
-#     plt.imshow(img, cmap='gray')
-#     plt.show()
-#     img1 = Variable(torch.tensor(img), requires_grad=True).to(device)
-#     optics = Optics_simulation(img1.shape[0])
-#     kernel = np.array(
-#         [[1, 4, 7, 4, 1], [4, 16, 26, 16, 4], [7, 26, 41, 26, 7], [4, 16, 26, 16, 4], [1, 4, 7, 4, 1]])/26
-#     kernel = Variable(torch.tensor(kernel, dtype=torch.float64), requires_grad=True).to(device)
-#     output = optics.optConv2d(img1, kernel, True)
-#     plt.imshow(output.cpu().detach().numpy(), cmap='gray')
-#     plt.show()
-#     plt.imshow(signal.correlate(img, kernel.cpu().detach().numpy(), mode="same"), cmap='gray')
-#     plt.show()
+if __name__ == '__main__':
+    img = io.imread("non_noisy.png", as_gray=True)/255
+    # img = resize(img, (600,28),anti_aliasing=True)/255
+    plt.imshow(img, cmap='gray')
+    plt.axis("off")
+    plt.savefig("intest.png", bbox_inches='tight')
+    plt.show()
+    img1 = Variable(torch.tensor(img), requires_grad=True).to(device)
+    optics = Optics_simulation(img1.shape[0])
+    kernel = np.array([[1,2,1],[0,0,0],[-1,-2,-1]])
+    # kernel = np.array(
+    #     [[-1, -1, -1, -1, -1], [-1, -1, -1, -1, -1], [-1, -1, 9, -1, -1], [-1, -1, -1, -1, -1], [-1, -1, -1, -1, -1]])
+    sns.heatmap(kernel)
+    plt.show()
+    kernel = Variable(torch.tensor(kernel, dtype=torch.float64), requires_grad=True).to(device)
+    output = optics.optConv2d(img1, kernel, False)
+    output = torch.rot90(torch.rot90(output))
+    plt.imshow(output.cpu().detach().numpy(), cmap='gray')
+    plt.axis("off")
+    plt.savefig("outtest.png", bbox_inches='tight')
+    plt.show()
+    plt.imshow(signal.correlate(img, kernel.cpu().detach().numpy(), mode="same"), cmap='gray')
+    plt.show()
