@@ -112,7 +112,6 @@ class Optics_simulation:
 
 
     def optConv2d(self, img,kernel,pseudo_negativity=False):
-        img, kernel = self.process_inputs(img, kernel)
         if pseudo_negativity:
             relu = ReLU()
             pos, neg = relu(kernel), relu(kernel * (-1))
