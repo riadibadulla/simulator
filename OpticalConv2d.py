@@ -13,6 +13,7 @@ class OpticalConv2dNew(nn.Module):
         kernel = torch.Tensor(output_channels,input_channels,kernel_size,kernel_size)
         self.kernel = nn.Parameter(kernel)
         nn.init.kaiming_uniform_(self.kernel)
+        self.input_size =input_size
         self.opt = Optics_simulation(input_size)
 
     def __pad(self,large,small,padding_size):
@@ -34,14 +35,15 @@ class OpticalConv2dNew(nn.Module):
         return img, kernel
 
     def forward(self,input):
+        batch_size = input.size(dim=0)
         input, kernel = self.process_inputs(input, self.kernel)
-        output = torch.zeros(size=(input.size(dim=0), self.kernel.size(dim=0), input.size(dim=2), input.size(dim=3))).to(device)
-        for batch in range(input.size(dim=0)):
-            for output_channel in range(output.shape[1]):
-                for image in input[batch, :, :, :]:
-                    input_channel = 0
-                    output[batch, output_channel, :, :] = output[batch, output_channel, :, :] + self.opt.optConv2d(
-                        image, kernel[output_channel, input_channel, :, :], pseudo_negativity=self.pseudo_negativity)
-                    input_channel += 1
+
+        input = input.repeat(1,self.output_channels,1,1)
+        input = torch.reshape(input,(batch_size,self.output_channels,self.input_channels,self.input_size, self.input_size))
+        kernel = kernel.repeat(batch_size,1,1,1)
+        kernel = torch.reshape(kernel,(batch_size,self.output_channels,self.input_channels,self.input_size, self.input_size))
+
+        output = self.opt.optConv2d(input, kernel, pseudo_negativity=self.pseudo_negativity)
+        output = torch.sum(output, dim=2,dtype=torch.float32)
         return output
 
