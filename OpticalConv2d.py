@@ -3,7 +3,20 @@ import torch
 from Optics_simulation import Optics_simulation
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-class OpticalConv2dNew(nn.Module):
+class OpticalConv2d(nn.Module):
+    """A custom Optical Layer class
+
+    :param input_channels: Number of input channels of the layer
+    :type input_channels: int
+    :param output_channels: Number of output channels of the layer
+    :type outout_channels: int
+    :param kernel_size: size of the squared kernel
+    :type kernel_size: int
+    :param pseudo_negativity: Should the layer use pseudo negativity (decreases the computation time twice)
+    :type pseudo_negativity: bool
+    :param input_size: Layer accepts only square inputs, this is the size of the sqaured input
+    :type input_size: int
+    """
 
     def __init__(self,input_channels,output_channels,kernel_size,pseudo_negativity=False,input_size=28):
         super().__init__()

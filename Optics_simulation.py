@@ -20,7 +20,11 @@ cmap = LinearSegmentedColormap.from_list(cmap_name, colors, N=150)
 
 
 class Optics_simulation:
+    """A class which simulates the freespace optics
 
+    :param number_of_pixels: size of the input. In case the kernel is larger than input, this should be the kernel size
+    :type number_of_pixels: int
+    """
     def __init__(self,number_of_pixels=28):
 
         self.wavelength = 532 * 10**(-9)
@@ -31,8 +35,12 @@ class Optics_simulation:
         self.H = self.calc_phase_transmittance_freespace()
         self.H_lens = self.calc_phase_transmittance_freespace_lens()
 
-
     def calc_phase_transmittance_freespace_lens(self):
+        """Calculates the phase transittance of the lens
+
+        :return: Phase transmittance of the convex lens
+        :rtype: torch.Tensor
+        """
         k = np.pi * 2.0 / self.wavelength
         x, y = utils.mesh_grid(self.npix, self.pixel_scale)
         x, y = torch.tensor(x).to(device), torch.tensor(y).to(device)
@@ -45,6 +53,11 @@ class Optics_simulation:
         return phi
 
     def calc_phase_transmittance_freespace(self):
+        """Calculates the phase transittance in freespace. h matrix
+
+        :return: h matrix. Phase transmittance
+        :rtype: torch.Tensor
+        """
         x, y = utils.mesh_grid(self.npix, self.pixel_scale)
         x, y = torch.tensor(x).to(device), torch.tensor(y).to(device)
         f_x = (x / (self.pixel_scale ** 2 * self.npix))
@@ -59,19 +72,41 @@ class Optics_simulation:
         return H
 
     def propagate_through_freespace(self, wavefront):
+        """Propagates tge wavefront through freespace using angular spectrum method
+
+        :param wavefront: wavefront in complex
+        :type wavefront: torch.Tensor
+        :return: wavefront at distance
+        :rtype: torch.Tensor
+        """
         wf_at_distance = utils.fft(wavefront)
         wf_at_distance = wf_at_distance * self.H
         wf_at_distance = utils.ifft(wf_at_distance)
         return wf_at_distance
 
     def plot_wavefront(self, wavefront, vmax=None):
+        """In case if need to plot the wavefront and save it
+
+        :param wavefront: wavefront in complex
+        :type wavefront: torch.Tensor
+        :param vmax: vmax of the imshow
+        :type vmax: float32
+        """
         plt.imshow(torch.abs(wavefront).cpu().detach().numpy(), cmap=cmap, vmax=vmax)
         plt.axis("off")
         plt.savefig(str(random.randint(1,50))+"test.png", bbox_inches='tight')
         plt.show()
 
     def convolution_4F(self, img, kernel):
+        """Performs the single convolution with optics
 
+        :param img: input of the device(image)
+        :type img: torch.Tensor
+        :param kernel: Kernel of the convolution, already padded
+        :type kernel: torch.Tensor
+        :return: amplitude of the 4F system
+        :rtype: torch.Tensor
+        """
         wavefront = img * torch.exp(1.j * torch.zeros(size=(self.npix,self.npix)).to(device))
         wavefront_1F = self.propagate_through_freespace(wavefront)
         wavefront_1Lens = wavefront_1F*self.H_lens
@@ -112,6 +147,17 @@ class Optics_simulation:
 
 
     def optConv2d(self, img,kernel,pseudo_negativity=False):
+        """Performs the convolution, either with pseudo negativity or wigthout, and fft shifts the output.
+
+        :param img: input of the device(image)
+        :type img: torch.Tensor
+        :param kernel: Kernel of the convolution, already padded
+        :type kernel: torch.Tensor
+        :param pseudo_negativity: Apply Pseudo negativity if True
+        :type pseudo_negativity: bool
+        :return: convolved tensor
+        :rtype: torch.Tensor
+        """
         if pseudo_negativity:
             relu = ReLU()
             pos, neg = relu(kernel), relu(kernel * (-1))
@@ -127,7 +173,7 @@ class Optics_simulation:
         return result
 
 if __name__ == '__main__':
-    img = io.imread("non_noisy.png", as_gray=True)/255
+    img = io.imread("mnist.jpg", as_gray=True)/255
     # img = resize(img, (600,28),anti_aliasing=True)/255
     plt.imshow(img, cmap='gray')
     plt.axis("off")
