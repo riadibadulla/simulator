@@ -4,7 +4,7 @@ from torchvision.transforms import transforms
 import torch.utils.data
 from torch import optim
 from tqdm import tqdm
-from OpticalConv2d import OpticalConv2dNew
+from OpticalConv2d import OpticalConv2d
 
 torch.cuda.empty_cache()
 import gc
