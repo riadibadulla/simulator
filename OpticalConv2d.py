@@ -27,7 +27,9 @@ class OpticalConv2d(nn.Module):
         self.kernel = nn.Parameter(kernel)
         nn.init.kaiming_uniform_(self.kernel)
         self.input_size =input_size
-        self.opt = Optics_simulation(input_size)
+        self.beam_size_px = kernel_size if kernel_size>input_size else input_size
+        print(self.beam_size_px)
+        self.opt = Optics_simulation(self.beam_size_px)
 
     def __pad(self,large,small,padding_size):
         """Pads the tensors, so they can be the same size
@@ -42,7 +44,7 @@ class OpticalConv2d(nn.Module):
         :rtype: torch.Tensor, torch.Tensor
         """
         small = torch.nn.functional.pad(small, (padding_size,padding_size,padding_size,padding_size))
-        if small.shape != large.shape:
+        if small[2].shape != large[2].shape:
             small = torch.nn.functional.pad(small, (0,1,0,1))
         return large,small
 
@@ -56,16 +58,15 @@ class OpticalConv2d(nn.Module):
         :return: image and kernel of the same size after padding one of them
         :rtype: torch.Tensor, torch.Tensor
         """
-
         if img.shape==kernel.shape:
             return img, kernel
         size_of_image = img.shape[2]
         size_of_kernel = kernel.shape[2]
-        padding_size = abs(size_of_image - size_of_kernel) // 2
+        self.padding_size = abs(size_of_image - size_of_kernel) // 2
         if size_of_image > size_of_kernel:
-            img, kernel = self.__pad(img,kernel,padding_size)
+            img, kernel = self.__pad(img,kernel,self.padding_size)
         else:
-            kernel, img = self.__pad(kernel,img,padding_size)
+            kernel, img = self.__pad(kernel,img,self.padding_size)
         return img, kernel
 
     def forward(self,input):
@@ -82,13 +83,18 @@ class OpticalConv2d(nn.Module):
         :rtype: torch.Tensor
         """
         batch_size = input.size(dim=0)
-        input, kernel = self.process_inputs(input, self.kernel)
 
+        #Padding either input or kernel
+        input, kernel = self.process_inputs(input, self.kernel)
         input = input.repeat(1,self.output_channels,1,1)
-        input = torch.reshape(input,(batch_size,self.output_channels,self.input_channels,self.input_size, self.input_size))
+        input = torch.reshape(input,(batch_size,self.output_channels,self.input_channels,self.beam_size_px,self.beam_size_px))
         kernel = kernel.repeat(batch_size,1,1,1)
-        kernel = torch.reshape(kernel,(batch_size,self.output_channels,self.input_channels,self.input_size, self.input_size))
+        kernel = torch.reshape(kernel,(batch_size,self.output_channels,self.input_channels,self.beam_size_px,self.beam_size_px))
 
         output = self.opt.optConv2d(input, kernel, pseudo_negativity=self.pseudo_negativity)
         output = torch.sum(output, dim=2,dtype=torch.float32)
+
+        #Upadding the input
+        if self.kernel_size>self.input_size:
+            return output[:,:,self.padding_size:self.padding_size+self.input_size,self.padding_size:self.padding_size+self.input_size]
         return output
