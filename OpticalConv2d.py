@@ -28,7 +28,6 @@ class OpticalConv2d(nn.Module):
         nn.init.kaiming_uniform_(self.kernel)
         self.input_size =input_size
         self.beam_size_px = kernel_size if kernel_size>input_size else input_size
-        print(self.beam_size_px)
         self.opt = Optics_simulation(self.beam_size_px)
 
     def __pad(self,large,small,padding_size):
@@ -44,7 +43,7 @@ class OpticalConv2d(nn.Module):
         :rtype: torch.Tensor, torch.Tensor
         """
         small = torch.nn.functional.pad(small, (padding_size,padding_size,padding_size,padding_size))
-        if small[2].shape != large[2].shape:
+        if small[0,0,0].shape != large[0,0,0].shape:
             small = torch.nn.functional.pad(small, (0,1,0,1))
         return large,small
 
