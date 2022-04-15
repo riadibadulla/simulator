@@ -8,7 +8,7 @@ import pkg_resources
 import torch
 
 
-def fft(array, method='numpy'):
+def fft(array):
     """Performs 2D FFT for array with given method
 
     :param array: array to be Fourier transformed
@@ -26,16 +26,10 @@ def fft(array, method='numpy'):
     >>> po.utils.fft(arr)
 
     """
-    if method == 'numpy':
-        ishifted_array = torch.fft.ifftshift(array)
-        fft_array = torch.fft.fft2(ishifted_array)
-        shifted_fft_array = torch.fft.fftshift(fft_array)
-        return shifted_fft_array
-    else:
-        raise ValueError(f"")
+    return torch.fft.fftshift(torch.fft.fft2(torch.fft.ifftshift(array)))
 
 
-def ifft(array: np.array, method='numpy') -> np.array:
+def ifft(array: np.array) -> np.array:
     """Performs 2D IFFT for array with given method
 
     :param array: array to be inversely Fourier transformed
@@ -53,13 +47,7 @@ def ifft(array: np.array, method='numpy') -> np.array:
     >>> po.utils.ifft(arr)
 
     """
-    if method == 'numpy':
-        ishifted_array = torch.fft.ifftshift(array)
-        ifft_array = torch.fft.ifft2(ishifted_array)
-        shifted_ifft_array = torch.fft.ifftshift(ifft_array)
-        return shifted_ifft_array
-    else:
-        raise ValueError(f"")
+    return torch.fft.ifftshift(torch.fft.ifft2(torch.fft.ifftshift(array)))
 
 
 def mesh_grid(npix, pixel_scale):
