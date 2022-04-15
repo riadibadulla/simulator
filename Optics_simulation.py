@@ -108,13 +108,13 @@ class Optics_simulation:
         :rtype: torch.Tensor
         """
         wavefront = img * torch.exp(1.j * torch.zeros(size=(self.npix,self.npix)).to(device))
-        wavefront_1F = self.propagate_through_freespace(wavefront)
-        wavefront_1Lens = wavefront_1F*self.H_lens
-        wavefront_2F = self.propagate_through_freespace(wavefront_1Lens)
-        wavefront_filtered = wavefront_2F * torch.fft.fftshift(torch.fft.fft2(kernel))
-        wavefront_3F = self.propagate_through_freespace(wavefront_filtered)
-        wavefront_2Lens = wavefront_3F*self.H_lens
-        wavefront_4F = self.propagate_through_freespace(wavefront_2Lens)
+        wavefront = self.propagate_through_freespace(wavefront)
+        wavefront = wavefront*self.H_lens
+        wavefront = self.propagate_through_freespace(wavefront)
+        wavefront = wavefront * torch.fft.fftshift(torch.fft.fft2(kernel))
+        wavefront = self.propagate_through_freespace(wavefront)
+        wavefront = wavefront*self.H_lens
+        wavefront = self.propagate_through_freespace(wavefront)
         # self.plot_wavefront(wavefront)
         # self.plot_wavefront(wavefront_1F)
         # self.plot_wavefront(wavefront_1Lens)
@@ -124,7 +124,7 @@ class Optics_simulation:
         # self.plot_wavefront(torch.fft.ifftshift(wavefront_2Lens))
         # self.plot_wavefront(torch.fft.ifftshift(wavefront_4F))
         # self.plot_wavefront(torch.fft.fftshift(torch.fft.fft2(kernel)))
-        return torch.abs(wavefront_4F)
+        return torch.abs(wavefront)
 
     def __pad(self,large,small,padding_size):
         small = torch.nn.functional.pad(small, (padding_size,padding_size,padding_size,padding_size))
