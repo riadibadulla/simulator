@@ -48,7 +48,7 @@ class Optics_simulation:
         t1 = torch.exp(-(1.j * k) / (2 * self.f) * xy_squared)
         phi = torch.where(
             xy_squared <= self.r ** 2, t1, 1+0.j
-        ).to(device)
+        )
         # TODO: maybe need to tensor entire function
         return phi.to(device)
 
