@@ -43,14 +43,14 @@ class Optics_simulation:
         """
         k = np.pi * 2.0 / self.wavelength
         x, y = utils.mesh_grid(self.npix, self.pixel_scale)
-        x, y = torch.tensor(x).to(device), torch.tensor(y).to(device)
+        x, y = torch.tensor(x), torch.tensor(y)
         xy_squared = x ** 2 + y ** 2
         t1 = torch.exp(-(1.j * k) / (2 * self.f) * xy_squared)
         phi = torch.where(
             xy_squared <= self.r ** 2, t1, 1+0.j
         ).to(device)
         # TODO: maybe need to tensor entire function
-        return phi
+        return phi.to(device)
 
     def calc_phase_transmittance_freespace(self):
         """Calculates the phase transittance in freespace. h matrix
@@ -59,7 +59,7 @@ class Optics_simulation:
         :rtype: torch.Tensor
         """
         x, y = utils.mesh_grid(self.npix, self.pixel_scale)
-        x, y = torch.tensor(x).to(device), torch.tensor(y).to(device)
+        x, y = torch.tensor(x), torch.tensor(y)
         f_x = (x / (self.pixel_scale ** 2 * self.npix))
         f_y = (y / (self.pixel_scale ** 2 * self.npix))
         k = np.pi * 2.0 / self.wavelength
@@ -69,7 +69,7 @@ class Optics_simulation:
         exp_2 = -1.j * np.pi * self.wavelength * self.f * rhosqr
         #TODO: may need to edit ks and xys to be tensor from the begining
         H = torch.exp(exp_1 + exp_2)
-        return H
+        return H.to(device)
 
     def propagate_through_freespace(self, wavefront):
         """Propagates tge wavefront through freespace using angular spectrum method
