@@ -158,7 +158,7 @@ class Optics_simulation:
         :return: convolved tensor
         :rtype: torch.Tensor
         """
-        # img, kernel = self.process_inputs(img, kernel)
+        img, kernel = self.process_inputs(img, kernel)
         if pseudo_negativity:
             relu = ReLU()
             pos, neg = relu(kernel), relu(kernel * (-1))
@@ -170,7 +170,6 @@ class Optics_simulation:
             result = torch.sub(output_neg,output_pos)
         else:
             result = self.convolution_4F(img, kernel)
-        result = torch.fft.fftshift(result)
         return result
 
 if __name__ == '__main__':

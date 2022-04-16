@@ -26,7 +26,7 @@ def fft(array):
     >>> po.utils.fft(arr)
 
     """
-    return torch.fft.fftshift(torch.fft.fft2(torch.fft.ifftshift(array)))
+    return torch.fft.fftshift(torch.fft.fft2(array))
 
 
 def ifft(array: np.array) -> np.array:
@@ -47,7 +47,7 @@ def ifft(array: np.array) -> np.array:
     >>> po.utils.ifft(arr)
 
     """
-    return torch.fft.ifftshift(torch.fft.ifft2(torch.fft.ifftshift(array)))
+    return torch.fft.ifftshift(torch.fft.ifft2(array))
 
 
 def mesh_grid(npix, pixel_scale):
