@@ -32,7 +32,7 @@ class Optics_simulation:
         self.f = 10 * 10**(-3)
         self.pixel_scale = math.sqrt(532*10**(-11)/number_of_pixels)
         self.r = 2.5 * 10**(-3)
-        self.H = self.calc_phase_transmittance_freespace()
+        self.H = torch.fft.ifftshift(self.calc_phase_transmittance_freespace())
         self.H_lens = self.calc_phase_transmittance_freespace_lens()
 
     def calc_phase_transmittance_freespace_lens(self):
@@ -158,7 +158,7 @@ class Optics_simulation:
         :return: convolved tensor
         :rtype: torch.Tensor
         """
-        img, kernel = self.process_inputs(img, kernel)
+        # img, kernel = self.process_inputs(img, kernel)
         if pseudo_negativity:
             relu = ReLU()
             pos, neg = relu(kernel), relu(kernel * (-1))
@@ -170,6 +170,7 @@ class Optics_simulation:
             result = torch.sub(output_neg,output_pos)
         else:
             result = self.convolution_4F(img, kernel)
+        result = torch.fft.fftshift(result)
         return result
 
 if __name__ == '__main__':
