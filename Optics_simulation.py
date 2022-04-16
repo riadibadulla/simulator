@@ -158,6 +158,7 @@ class Optics_simulation:
         :return: convolved tensor
         :rtype: torch.Tensor
         """
+        # img, kernel = self.process_inputs(img, kernel)
         if pseudo_negativity:
             relu = ReLU()
             pos, neg = relu(kernel), relu(kernel * (-1))
@@ -166,15 +167,15 @@ class Optics_simulation:
             output_neg = self.convolution_4F(img, neg)
             # output_pos = torch.fft.ifft(torch.fft.fft2(img)*torch.fft.fft2(pos))
             # output_neg = torch.fft.ifft(torch.fft.fft2(img)*torch.fft.fft2(neg))
-            result = torch.sub(output_pos,output_neg)
+            result = torch.sub(output_neg,output_pos)
         else:
             result = self.convolution_4F(img, kernel)
         result = torch.fft.fftshift(result)
         return result
 
 if __name__ == '__main__':
-    img = io.imread("mnist.jpg", as_gray=True)/255
-    # img = resize(img, (600,28),anti_aliasing=True)/255
+    img = io.imread("mnist-test.jpg", as_gray=True)
+    img = resize(img, (28,28),anti_aliasing=True)/255
     plt.imshow(img, cmap='gray')
     plt.axis("off")
     plt.savefig("intest.png", bbox_inches='tight')
@@ -187,7 +188,7 @@ if __name__ == '__main__':
     sns.heatmap(kernel)
     plt.show()
     kernel = Variable(torch.tensor(kernel, dtype=torch.float64), requires_grad=True).to(device)
-    output = optics.optConv2d(img1, kernel, False)
+    output = optics.optConv2d(img1, kernel, True)
     output = torch.rot90(torch.rot90(output))
     plt.imshow(output.cpu().detach().numpy(), cmap='gray')
     plt.axis("off")
