@@ -11,7 +11,7 @@ import torch
 from torch.autograd import Variable
 import torch.nn.functional as F
 from torch.nn.modules.activation import ReLU
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 import utils
 from matplotlib.colors import LinearSegmentedColormap
 colors = [(0, 0, 0), (0, 1, 0)]
@@ -50,7 +50,7 @@ class Optics_simulation:
             xy_squared <= self.r ** 2, t1, 1+0.j
         )
         # TODO: maybe need to tensor entire function
-        return phi.to(device)
+        return phi
 
     def calc_phase_transmittance_freespace(self):
         """Calculates the phase transittance in freespace. h matrix
@@ -69,7 +69,7 @@ class Optics_simulation:
         exp_2 = -1.j * np.pi * self.wavelength * self.f * rhosqr
         #TODO: may need to edit ks and xys to be tensor from the begining
         H = torch.exp(exp_1 + exp_2)
-        return H.to(device)
+        return H
 
     def propagate_through_freespace(self, wavefront):
         """Propagates tge wavefront through freespace using angular spectrum method
@@ -107,6 +107,10 @@ class Optics_simulation:
         :return: amplitude of the 4F system
         :rtype: torch.Tensor
         """
+        device = img.device
+        self.H = self.H.to(device)
+        self.H_lens = self.H_lens.to(device)
+
         wavefront = img * torch.exp(1.j * torch.zeros(size=(self.npix,self.npix)).to(device))
         wavefront = self.propagate_through_freespace(wavefront)
         wavefront = wavefront*self.H_lens
@@ -115,6 +119,7 @@ class Optics_simulation:
         wavefront = self.propagate_through_freespace(wavefront)
         wavefront = wavefront*self.H_lens
         wavefront = self.propagate_through_freespace(wavefront)
+
         # self.plot_wavefront(wavefront)
         # self.plot_wavefront(wavefront_1F)
         # self.plot_wavefront(wavefront_1Lens)

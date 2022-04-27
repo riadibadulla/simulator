@@ -9,7 +9,7 @@ from OpticalConv2d import OpticalConv2d
 torch.cuda.empty_cache()
 import gc
 gc.collect()
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 class Net(nn.Module):

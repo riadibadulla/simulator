@@ -1,10 +1,8 @@
 import logging
 import warnings
 
-import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
-import pkg_resources
 import torch
 
 
