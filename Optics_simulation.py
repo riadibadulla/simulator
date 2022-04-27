@@ -71,7 +71,7 @@ class Optics_simulation:
         H = torch.exp(exp_1 + exp_2)
         return H
 
-    def propagate_through_freespace(self, wavefront):
+    def propagate_through_freespace(self, wavefront, device):
         """Propagates tge wavefront through freespace using angular spectrum method
 
         :param wavefront: wavefront in complex
@@ -80,7 +80,7 @@ class Optics_simulation:
         :rtype: torch.Tensor
         """
         wf_at_distance = utils.fft(wavefront)
-        wf_at_distance = wf_at_distance * self.H
+        wf_at_distance = wf_at_distance * self.H.to(device)
         wf_at_distance = utils.ifft(wf_at_distance)
         return wf_at_distance
 
@@ -109,16 +109,15 @@ class Optics_simulation:
         """
         device = img.device
         self.H = self.H.to(device)
-        self.H_lens = self.H_lens.to(device)
 
         wavefront = img * torch.exp(1.j * torch.zeros(size=(self.npix,self.npix)).to(device))
-        wavefront = self.propagate_through_freespace(wavefront)
-        wavefront = wavefront*self.H_lens
-        wavefront = self.propagate_through_freespace(wavefront)
+        wavefront = self.propagate_through_freespace(wavefront, device)
+        wavefront = wavefront*self.H_lens.to(device)
+        wavefront = self.propagate_through_freespace(wavefront, device)
         wavefront = wavefront * torch.fft.fftshift(torch.fft.fft2(kernel))
-        wavefront = self.propagate_through_freespace(wavefront)
-        wavefront = wavefront*self.H_lens
-        wavefront = self.propagate_through_freespace(wavefront)
+        wavefront = self.propagate_through_freespace(wavefront, device)
+        wavefront = wavefront*self.H_lens.to(device)
+        wavefront = self.propagate_through_freespace(wavefront, device)
 
         # self.plot_wavefront(wavefront)
         # self.plot_wavefront(wavefront_1F)
