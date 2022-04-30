@@ -18,13 +18,17 @@ class OpticalConv2d(nn.Module):
     :type input_size: int
     """
 
-    def __init__(self,input_channels,output_channels,kernel_size,pseudo_negativity=False,input_size=28):
+    def __init__(self,input_channels,output_channels,kernel_size,is_bias=True,pseudo_negativity=False,input_size=28):
         super().__init__()
         self.pseudo_negativity = pseudo_negativity
         self.input_channels, self.output_channels = input_channels, output_channels
         self.kernel_size = kernel_size
         kernel = torch.Tensor(output_channels,input_channels,kernel_size,kernel_size)
         self.kernel = nn.Parameter(kernel)
+        self.is_bias = is_bias
+        if is_bias:
+            bias = torch.Tensor(output_channels,1,1)
+            self.bias = nn.Parameter(bias)
         nn.init.kaiming_uniform_(self.kernel)
         self.input_size =input_size
         self.beam_size_px = kernel_size if kernel_size>input_size else input_size
@@ -95,5 +99,8 @@ class OpticalConv2d(nn.Module):
 
         #Upadding the input
         if self.kernel_size>self.input_size:
-            return output[:,:,self.padding_size:self.padding_size+self.input_size,self.padding_size:self.padding_size+self.input_size]
+            output=output[:,:,self.padding_size:self.padding_size+self.input_size,self.padding_size:self.padding_size+self.input_size]
+        #add bias
+        if self.is_bias:
+            output += self.bias.repeat(batch_size,1,1,1)
         return output
