@@ -30,6 +30,7 @@ class OpticalConv2d(nn.Module):
             bias = torch.Tensor(output_channels,1,1)
             self.bias = nn.Parameter(bias)
         nn.init.kaiming_uniform_(self.kernel)
+        nn.init.kaiming_uniform_(self.bias)
         self.input_size =input_size
         self.beam_size_px = kernel_size if kernel_size>input_size else input_size
         self.opt = Optics_simulation(self.beam_size_px)
