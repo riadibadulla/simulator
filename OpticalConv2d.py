@@ -2,7 +2,7 @@ from torch import nn
 import torch
 from Optics_simulation import Optics_simulation
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-
+import math
 class OpticalConv2d(nn.Module):
     """A custom Optical Layer class
 
@@ -25,12 +25,14 @@ class OpticalConv2d(nn.Module):
         self.kernel_size = kernel_size
         kernel = torch.Tensor(output_channels,input_channels,kernel_size,kernel_size)
         self.kernel = nn.Parameter(kernel)
+        nn.init.kaiming_uniform_(self.kernel, a=math.sqrt(5))
         self.is_bias = is_bias
         if is_bias:
+            fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.kernel)
+            bound = 1 / math.sqrt(fan_in)
             bias = torch.Tensor(output_channels,1,1)
             self.bias = nn.Parameter(bias)
-            nn.init.kaiming_uniform_(self.bias)
-        nn.init.kaiming_uniform_(self.kernel)
+            nn.init.uniform_(self.bias, -bound, bound)
         self.input_size =input_size
         self.beam_size_px = kernel_size if kernel_size>input_size else input_size
         self.opt = Optics_simulation(self.beam_size_px)
