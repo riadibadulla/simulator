@@ -11,7 +11,7 @@ import torch
 from torch.autograd import Variable
 import torch.nn.functional as F
 from torch.nn.modules.activation import ReLU
-# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 import utils
 from matplotlib.colors import LinearSegmentedColormap
 colors = [(0, 0, 0), (0, 1, 0)]
@@ -28,10 +28,11 @@ class Optics_simulation:
     def __init__(self,number_of_pixels=28):
 
         self.wavelength = 532 * 10**(-9)
-        self.npix = number_of_pixels
+        self.npix = number_of_pixels+4
         self.f = 10 * 10**(-3)
-        self.pixel_scale = math.sqrt(532*10**(-11)/number_of_pixels)
+        self.pixel_scale = math.sqrt(532*10**(-11)/self.npix)
         self.r = 2.5 * 10**(-3)
+        # self.H = torch.fft.fftshift(self.calc_phase_transmittance_freespace())
         self.H = torch.fft.ifftshift(self.calc_phase_transmittance_freespace())
         self.H_lens = self.calc_phase_transmittance_freespace_lens()
 
@@ -118,16 +119,6 @@ class Optics_simulation:
         wavefront = self.propagate_through_freespace(wavefront, device)
         wavefront = wavefront*self.H_lens.to(device)
         wavefront = self.propagate_through_freespace(wavefront, device)
-
-        # self.plot_wavefront(wavefront)
-        # self.plot_wavefront(wavefront_1F)
-        # self.plot_wavefront(wavefront_1Lens)
-        # self.plot_wavefront(wavefront_2F, vmax=0.0025)
-        # self.plot_wavefront(wavefront_filtered, vmax=0.0025)
-        # self.plot_wavefront(torch.fft.ifftshift(wavefront_3F))
-        # self.plot_wavefront(torch.fft.ifftshift(wavefront_2Lens))
-        # self.plot_wavefront(torch.fft.ifftshift(wavefront_4F))
-        # self.plot_wavefront(torch.fft.fftshift(torch.fft.fft2(kernel)))
         return torch.abs(wavefront)
 
     def __pad(self,large,small,padding_size):
@@ -163,6 +154,8 @@ class Optics_simulation:
         :rtype: torch.Tensor
         """
         # img, kernel = self.process_inputs(img, kernel)
+        img = torch.nn.functional.pad(img, (2, 2, 2, 2))
+        kernel = torch.nn.functional.pad(kernel, (2, 2, 2, 2))
         if pseudo_negativity:
             relu = ReLU()
             pos, neg = relu(kernel), relu(kernel * (-1))
@@ -175,7 +168,7 @@ class Optics_simulation:
         else:
             result = self.convolution_4F(img, kernel)
         result = torch.fft.fftshift(result)
-        return result
+        return result[:,:,:,4: self.npix, 4: self.npix]
 
 if __name__ == '__main__':
     img = io.imread("mnist-test.jpg", as_gray=True)
@@ -185,34 +178,38 @@ if __name__ == '__main__':
     plt.savefig("intest.png", bbox_inches='tight')
     plt.show()
     img1 = Variable(torch.tensor(img), requires_grad=True).to(device)
-    optics = Optics_simulation(img1.shape[0])
-    # kernel = np.array([[1,2,1],[0,0,0],[-1,-2,-1]])
-    kernel = np.array([[-0.0108, -0.0081, -0.0044, 0.0011, 0.0024, -0.0060, -0.0082, -0.0051,
-      -0.0007, 0.0045],
-     [-0.0044, -0.0023, 0.0031, 0.0100, 0.0133, 0.0017, -0.0007, 0.0001,
-      0.0011, 0.0047],
-     [0.0064, 0.0068, 0.0090, 0.0130, 0.0162, 0.0040, 0.0005, -0.0015,
-      -0.0033, -0.0007],
-     [0.0110, 0.0081, 0.0061, 0.0057, 0.0072, -0.0036, -0.0054, -0.0048,
-      -0.0074, -0.0068],
-     [-0.0012, -0.0035, -0.0047, -0.0039, -0.0008, -0.0056, -0.0054, -0.0020,
-      -0.0024, -0.0023],
-     [-0.0044, -0.0043, -0.0048, -0.0035, -0.0034, -0.0055, -0.0039, -0.0002,
-      0.0010, 0.0014],
-     [-0.0025, -0.0030, -0.0027, -0.0010, -0.0008, -0.0025, -0.0002, 0.0040,
-      0.0066, 0.0092],
-     [0.0030, 0.0016, -0.0003, -0.0018, -0.0038, -0.0068, -0.0054, -0.0017,
-      0.0020, 0.0061],
-     [0.0070, 0.0074, 0.0061, 0.0054, 0.0049, 0.0008, -0.0008, 0.0017,
-      0.0038, 0.0079],
-     [0.0009, -0.0020, -0.0041, -0.0017, 0.0024, -0.0008, -0.0023, -0.0013,
-      -0.0014, 0.0018]])
+
+    kernel = np.array([[1,2,1,3],[0,0,0,0],[-1,-2,-1,-5],[0,0,1,-5]])
+    # kernel = np.array([[-0.0108, -0.0081, -0.0044, 0.0011, 0.0024, -0.0060, -0.0082, -0.0051,
+    #   -0.0007, 0.0045],
+    #  [-0.0044, -0.0023, 0.0031, 0.0100, 0.0133, 0.0017, -0.0007, 0.0001,
+    #   0.0011, 0.0047],
+    #  [0.0064, 0.0068, 0.0090, 0.0130, 0.0162, 0.0040, 0.0005, -0.0015,
+    #   -0.0033, -0.0007],
+    #  [0.0110, 0.0081, 0.0061, 0.0057, 0.0072, -0.0036, -0.0054, -0.0048,
+    #   -0.0074, -0.0068],
+    #  [-0.0012, -0.0035, -0.0047, -0.0039, -0.0008, -0.0056, -0.0054, -0.0020,
+    #   -0.0024, -0.0023],
+    #  [-0.0044, -0.0043, -0.0048, -0.0035, -0.0034, -0.0055, -0.0039, -0.0002,
+    #   0.0010, 0.0014],
+    #  [-0.0025, -0.0030, -0.0027, -0.0010, -0.0008, -0.0025, -0.0002, 0.0040,
+    #   0.0066, 0.0092],
+    #  [0.0030, 0.0016, -0.0003, -0.0018, -0.0038, -0.0068, -0.0054, -0.0017,
+    #   0.0020, 0.0061],
+    #  [0.0070, 0.0074, 0.0061, 0.0054, 0.0049, 0.0008, -0.0008, 0.0017,
+    #   0.0038, 0.0079],
+    #  [0.0009, -0.0020, -0.0041, -0.0017, 0.0024, -0.0008, -0.0023, -0.0013,
+    #   -0.0014, 0.0018]])
     sns.heatmap(kernel)
     plt.show()
     kernel = Variable(torch.tensor(kernel, dtype=torch.float64), requires_grad=True).to(device)
-    kernel = torch.nn.functional.pad(kernel, (9, 9, 9, 9))
-    output = optics.optConv2d(img1, kernel, True)
+    # img1 = torch.nn.functional.pad(img1, (2, 2, 2, 2))
+    kernel_opt = torch.nn.functional.pad(kernel, (12, 12, 12, 12))
+    optics = Optics_simulation(img1.shape[0])
+    output = optics.optConv2d(img1, kernel_opt, True)
     output = torch.rot90(torch.rot90(output))
+    print(output.cpu().detach().numpy().shape)
+    # [4: 14, 4: 14]
     plt.imshow(output.cpu().detach().numpy(), cmap='gray')
     plt.axis("off")
     plt.savefig("outtest.png", bbox_inches='tight')

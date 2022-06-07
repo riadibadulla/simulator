@@ -89,14 +89,12 @@ class OpticalConv2d(nn.Module):
         :rtype: torch.Tensor
         """
         batch_size = input.size(dim=0)
-
         #Padding either input or kernel
         input, kernel = self.process_inputs(input, self.kernel)
         input = input.repeat(1,self.output_channels,1,1)
         input = torch.reshape(input,(batch_size,self.output_channels,self.input_channels,self.beam_size_px,self.beam_size_px))
         kernel = kernel.repeat(batch_size,1,1,1)
         kernel = torch.reshape(kernel,(batch_size,self.output_channels,self.input_channels,self.beam_size_px,self.beam_size_px))
-
         output = self.opt.optConv2d(input, kernel, pseudo_negativity=self.pseudo_negativity)
         output = torch.sum(output, dim=2,dtype=torch.float32)
 
