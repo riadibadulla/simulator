@@ -167,19 +167,19 @@ class Optics_simulation:
             result = torch.sub(output_pos,output_neg)
         else:
             result = self.convolution_4F(img, kernel)
-        result = torch.fft.fftshift(result)
         return result[:,:,:,4: self.npix, 4: self.npix]
+        # return torch.fft.fftshift(result)[4:,4:]
 
 if __name__ == '__main__':
-    img = io.imread("mnist-test.jpg", as_gray=True)
-    img = resize(img, (28,28),anti_aliasing=True)/255
+    img = io.imread("mnist.jpg", as_gray=True)
+    img = resize(img, (10,10),anti_aliasing=True)/255
     plt.imshow(img, cmap='gray')
     plt.axis("off")
     plt.savefig("intest.png", bbox_inches='tight')
     plt.show()
     img1 = Variable(torch.tensor(img), requires_grad=True).to(device)
 
-    kernel = np.array([[1,2,1,3],[0,0,0,0],[-1,-2,-1,-5],[0,0,1,-5]])
+    kernel = np.array([[1,2,1],[0,0,0],[-1,-2,-1]])
     # kernel = np.array([[-0.0108, -0.0081, -0.0044, 0.0011, 0.0024, -0.0060, -0.0082, -0.0051,
     #   -0.0007, 0.0045],
     #  [-0.0044, -0.0023, 0.0031, 0.0100, 0.0133, 0.0017, -0.0007, 0.0001,
@@ -200,19 +200,20 @@ if __name__ == '__main__':
     #   0.0038, 0.0079],
     #  [0.0009, -0.0020, -0.0041, -0.0017, 0.0024, -0.0008, -0.0023, -0.0013,
     #   -0.0014, 0.0018]])
-    sns.heatmap(kernel)
-    plt.show()
+    # sns.heatmap(kernel)
+    # plt.show()
     kernel = Variable(torch.tensor(kernel, dtype=torch.float64), requires_grad=True).to(device)
-    # img1 = torch.nn.functional.pad(img1, (2, 2, 2, 2))
-    kernel_opt = torch.nn.functional.pad(kernel, (12, 12, 12, 12))
+    # img1 = torch.nn.functional.pad(img1, (1, 1, 1, 1))
+    kernel_padded = torch.nn.functional.pad(kernel, (3, 4, 3,4))
     optics = Optics_simulation(img1.shape[0])
-    output = optics.optConv2d(img1, kernel_opt, True)
+    output = optics.optConv2d(img1, kernel_padded, True)
     output = torch.rot90(torch.rot90(output))
-    print(output.cpu().detach().numpy().shape)
     # [4: 14, 4: 14]
     plt.imshow(output.cpu().detach().numpy(), cmap='gray')
     plt.axis("off")
     plt.savefig("outtest.png", bbox_inches='tight')
     plt.show()
+    # plt.imshow(torch.real(torch.fft.fftshift(torch.fft.ifft2(torch.fft.fft2(img1)*torch.fft.fft2(kernel_padded)))).cpu().detach().numpy()[:-2,:-2], cmap='gray')
+    # plt.show()
     plt.imshow(signal.convolve(img, kernel.cpu().detach().numpy(), mode="same"), cmap='gray')
     plt.show()
