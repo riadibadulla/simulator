@@ -25,10 +25,14 @@ class Optics_simulation:
     :param number_of_pixels: size of the input. In case the kernel is larger than input, this should be the kernel size
     :type number_of_pixels: int
     """
-    def __init__(self,number_of_pixels=28):
+    def __init__(self,number_of_pixels=28, full_padding_is_done=True):
 
         self.wavelength = 532 * 10**(-9)
-        self.npix = number_of_pixels+4
+        if not full_padding_is_done:
+            self.npix = number_of_pixels+4
+        else:
+            self.npix = number_of_pixels
+        self.full_padding_is_done = full_padding_is_done
         self.f = 10 * 10**(-3)
         self.pixel_scale = math.sqrt(532*10**(-11)/self.npix)
         self.r = 2.5 * 10**(-3)
@@ -154,8 +158,9 @@ class Optics_simulation:
         :rtype: torch.Tensor
         """
         # img, kernel = self.process_inputs(img, kernel)
-        img = torch.nn.functional.pad(img, (2, 2, 2, 2))
-        kernel = torch.nn.functional.pad(kernel, (2, 2, 2, 2))
+        if not self.full_padding_is_done:
+            img = torch.nn.functional.pad(img, (2, 2, 2, 2))
+            kernel = torch.nn.functional.pad(kernel, (2, 2, 2, 2))
         if pseudo_negativity:
             relu = ReLU()
             pos, neg = relu(kernel), relu(kernel * (-1))
@@ -167,8 +172,7 @@ class Optics_simulation:
             result = torch.sub(output_pos,output_neg)
         else:
             result = self.convolution_4F(img, kernel)
-        return result[:,:,:,4: self.npix, 4: self.npix]
-        # return torch.fft.fftshift(result)[4:,4:]
+        return torch.fft.fftshift(result)[...,4: self.npix, 4: self.npix]
 
 if __name__ == '__main__':
     img = io.imread("mnist.jpg", as_gray=True)
@@ -205,7 +209,7 @@ if __name__ == '__main__':
     kernel = Variable(torch.tensor(kernel, dtype=torch.float64), requires_grad=True).to(device)
     # img1 = torch.nn.functional.pad(img1, (1, 1, 1, 1))
     kernel_padded = torch.nn.functional.pad(kernel, (3, 4, 3,4))
-    optics = Optics_simulation(img1.shape[0])
+    optics = Optics_simulation(img1.shape[0],full_padding_is_done=False)
     output = optics.optConv2d(img1, kernel_padded, True)
     output = torch.rot90(torch.rot90(output))
     # [4: 14, 4: 14]

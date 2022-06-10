@@ -34,7 +34,7 @@ class OpticalConv2d(nn.Module):
             self.bias = nn.Parameter(bias)
             nn.init.uniform_(self.bias, -bound, bound)
         self.input_size =input_size
-        self.beam_size_px = kernel_size if kernel_size>input_size else input_size
+        self.beam_size_px = kernel_size if kernel_size>input_size else input_size+4
         self.opt = Optics_simulation(self.beam_size_px)
 
     def __pad(self,large,small,padding_size):
@@ -64,6 +64,7 @@ class OpticalConv2d(nn.Module):
         :return: image and kernel of the same size after padding one of them
         :rtype: torch.Tensor, torch.Tensor
         """
+        img = torch.nn.functional.pad(img, (2, 2, 2, 2))
         if img.shape==kernel.shape:
             return img, kernel
         size_of_image = img.shape[2]
