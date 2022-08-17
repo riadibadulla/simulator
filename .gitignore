@@ -3,6 +3,7 @@
 .idea/
 venv
 /venv
+/files
 *.jpg
 __pycache__
 __pycache__/
