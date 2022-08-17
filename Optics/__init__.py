@@ -1,5 +1,5 @@
-from . import Optics_simulation
-from . import OpticalConv2d
+from Optics.Optics_simulation import Optics_simulation
+from Optics.OpticalConv2d import OpticalConv2d
 
 __all__ = [
     'OpticalConv2d',
