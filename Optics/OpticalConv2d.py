@@ -1,6 +1,6 @@
 from torch import nn
 import torch
-from Optics_simulation import Optics_simulation
+from .Optics_simulation import Optics_simulation
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 import math
 class OpticalConv2d(nn.Module):

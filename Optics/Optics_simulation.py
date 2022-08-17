@@ -12,7 +12,7 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 from torch.nn.modules.activation import ReLU
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-import utils
+from . import utils
 from matplotlib.colors import LinearSegmentedColormap
 colors = [(0, 0, 0), (0, 1, 0)]
 cmap_name = 'my_list'
