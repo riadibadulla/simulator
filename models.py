@@ -2,8 +2,8 @@ from numpy import nan
 from torch.nn.modules.pooling import AdaptiveAvgPool2d
 import torch.nn as nn
 import torch.nn.functional as F
-# from Optics.OpticalConv2d import OpticalConv2d
-from Optics import OpticalConv2d
+# from optnn.OpticalConv2d import OpticalConv2d
+from optnn import OpticalConv2d
 
 def opt_conv_block(in_channels, out_channels, k=3, pool_size=0, input_size=10):
   layers = [
