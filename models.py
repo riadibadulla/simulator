@@ -59,7 +59,7 @@ class ResNet(nn.Module):
         x = self.classifier(x)
         return x
 
-class ResFATNETSMALLKERNEL(nn.Module):
+class FatNet(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = conv_block(3,64,k=7,pool_size=16)
@@ -93,7 +93,7 @@ class ResFATNETSMALLKERNEL(nn.Module):
         return x
 
 
-class Optical_ResFATNET(nn.Module):
+class Optica_FatNet(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = opt_conv_block(3,64,k=7,pool_size=16, input_size=32)
@@ -129,7 +129,7 @@ def get_model(name):
     if name=="RESNET":
         return ResNet()
     elif name=="OPTICALFATNET":
-        return Optical_ResFATNET()
+        return Optica_FatNet()
     elif name=="FATNET":
-        return ResFATNETSMALLKERNEL()
+        return FatNet()
 
