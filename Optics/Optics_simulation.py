@@ -125,26 +125,6 @@ class Optics_simulation:
         wavefront = self.propagate_through_freespace(wavefront, device)
         return torch.abs(wavefront)
 
-    def __pad(self,large,small,padding_size):
-        small = torch.nn.functional.pad(small, (padding_size,padding_size,padding_size,padding_size))
-        if small.shape != large.shape:
-            small = torch.nn.functional.pad(small, (0,1,0,1))
-        return large,small
-
-    def process_inputs(self,img, kernel):
-        if img.shape==kernel.shape:
-            return img, kernel
-
-        size_of_image = img.shape[0]
-        size_of_kernel = kernel.shape[0]
-        padding_size = abs(size_of_image - size_of_kernel) // 2
-        if size_of_image > size_of_kernel:
-            img, kernel = self.__pad(img,kernel,padding_size)
-        else:
-            kernel, img = self.__pad(kernel,img,padding_size)
-        return img, kernel
-
-
     def optConv2d(self, img,kernel,pseudo_negativity=False):
         """Performs the convolution, either with pseudo negativity or wigthout, and fft shifts the output.
 
@@ -157,7 +137,6 @@ class Optics_simulation:
         :return: convolved tensor
         :rtype: torch.Tensor
         """
-        # img, kernel = self.process_inputs(img, kernel)
         if not self.full_padding_is_done:
             img = torch.nn.functional.pad(img, (2, 2, 2, 2))
             kernel = torch.nn.functional.pad(kernel, (2, 2, 2, 2))
@@ -167,8 +146,6 @@ class Optics_simulation:
 
             output_pos = self.convolution_4F(img, pos)
             output_neg = self.convolution_4F(img, neg)
-            # output_pos = torch.fft.ifft(torch.fft.fft2(img)*torch.fft.fft2(pos))
-            # output_neg = torch.fft.ifft(torch.fft.fft2(img)*torch.fft.fft2(neg))
             result = torch.sub(output_pos,output_neg)
         else:
             result = self.convolution_4F(img, kernel)
@@ -184,28 +161,6 @@ if __name__ == '__main__':
     img1 = Variable(torch.tensor(img), requires_grad=True).to(device)
 
     kernel = np.array([[1,2,1],[0,0,0],[-1,-2,-1]])
-    # kernel = np.array([[-0.0108, -0.0081, -0.0044, 0.0011, 0.0024, -0.0060, -0.0082, -0.0051,
-    #   -0.0007, 0.0045],
-    #  [-0.0044, -0.0023, 0.0031, 0.0100, 0.0133, 0.0017, -0.0007, 0.0001,
-    #   0.0011, 0.0047],
-    #  [0.0064, 0.0068, 0.0090, 0.0130, 0.0162, 0.0040, 0.0005, -0.0015,
-    #   -0.0033, -0.0007],
-    #  [0.0110, 0.0081, 0.0061, 0.0057, 0.0072, -0.0036, -0.0054, -0.0048,
-    #   -0.0074, -0.0068],
-    #  [-0.0012, -0.0035, -0.0047, -0.0039, -0.0008, -0.0056, -0.0054, -0.0020,
-    #   -0.0024, -0.0023],
-    #  [-0.0044, -0.0043, -0.0048, -0.0035, -0.0034, -0.0055, -0.0039, -0.0002,
-    #   0.0010, 0.0014],
-    #  [-0.0025, -0.0030, -0.0027, -0.0010, -0.0008, -0.0025, -0.0002, 0.0040,
-    #   0.0066, 0.0092],
-    #  [0.0030, 0.0016, -0.0003, -0.0018, -0.0038, -0.0068, -0.0054, -0.0017,
-    #   0.0020, 0.0061],
-    #  [0.0070, 0.0074, 0.0061, 0.0054, 0.0049, 0.0008, -0.0008, 0.0017,
-    #   0.0038, 0.0079],
-    #  [0.0009, -0.0020, -0.0041, -0.0017, 0.0024, -0.0008, -0.0023, -0.0013,
-    #   -0.0014, 0.0018]])
-    # sns.heatmap(kernel)
-    # plt.show()
     kernel = Variable(torch.tensor(kernel, dtype=torch.float64), requires_grad=True).to(device)
     # img1 = torch.nn.functional.pad(img1, (1, 1, 1, 1))
     kernel_padded = torch.nn.functional.pad(kernel, (3, 4, 3,4))
