@@ -3,6 +3,7 @@ import torch
 from .Optics_simulation import Optics_simulation
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 import math
+from torch.distributions import Poisson
 class OpticalConv2d(nn.Module):
     """A custom Optical Layer class
 
@@ -18,7 +19,7 @@ class OpticalConv2d(nn.Module):
     :type input_size: int
     """
 
-    def __init__(self,input_channels,output_channels,kernel_size,is_bias=True,pseudo_negativity=False,input_size=28):
+    def __init__(self,input_channels,output_channels,kernel_size,is_bias=True,pseudo_negativity=False,input_size=28, noise=None):
         super().__init__()
         self.pseudo_negativity = pseudo_negativity
         self.input_channels, self.output_channels = input_channels, output_channels
@@ -36,6 +37,7 @@ class OpticalConv2d(nn.Module):
         self.input_size =input_size
         self.beam_size_px = kernel_size if kernel_size>input_size else input_size+4
         self.opt = Optics_simulation(self.beam_size_px)
+        self.noise = noise
 
     def __pad(self,large,small,padding_size):
         """Pads the tensors, so they can be the same size
@@ -105,4 +107,8 @@ class OpticalConv2d(nn.Module):
         #add bias
         if self.is_bias:
             output += self.bias.repeat(batch_size,1,1,1)
+        if self.noise=="Poisson":
+            output = output*255
+            noise_matrix = Poisson(output).sample()
+            return (output + noise_matrix)/255
         return output
