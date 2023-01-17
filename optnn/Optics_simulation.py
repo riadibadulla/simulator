@@ -3,6 +3,7 @@ import random
 
 import numpy as np
 from matplotlib import pyplot as plt
+from torch.distributions import Poisson
 from skimage import io
 from skimage.transform import rescale, resize, downscale_local_mean
 import seaborn as sns
@@ -125,7 +126,13 @@ class Optics_simulation:
         wavefront = self.propagate_through_freespace(wavefront, device)
         return torch.abs(wavefront)
 
-    def optConv2d(self, img,kernel,pseudo_negativity=False):
+    def _apply_noise(self,output):
+        output = output * 255
+        noise_matrix = Poisson(output).sample()
+        noise_matrix.requires_grad = False
+        return (output + noise_matrix) / 255
+
+    def optConv2d(self, img,kernel,pseudo_negativity=False,noise="Poisson"):
         """Performs the convolution, either with pseudo negativity or wigthout, and fft shifts the output.
 
         :param img: input of the device(image)
@@ -146,6 +153,9 @@ class Optics_simulation:
 
             output_pos = self.convolution_4F(img, pos)
             output_neg = self.convolution_4F(img, neg)
+            if noise == "Poisson":
+                output_pos = self._apply_noise(output_pos)
+                output_neg = self._apply_noise(output_neg)
             result = torch.sub(output_pos,output_neg)
         else:
             result = self.convolution_4F(img, kernel)

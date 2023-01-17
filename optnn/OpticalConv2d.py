@@ -19,7 +19,7 @@ class OpticalConv2d(nn.Module):
     :type input_size: int
     """
 
-    def __init__(self,input_channels,output_channels,kernel_size,is_bias=True,pseudo_negativity=False,input_size=28, noise=None):
+    def __init__(self,input_channels,output_channels,kernel_size,is_bias=True,pseudo_negativity=False,input_size=28, noise="Poisson"):
         super().__init__()
         self.pseudo_negativity = pseudo_negativity
         self.input_channels, self.output_channels = input_channels, output_channels
@@ -98,7 +98,7 @@ class OpticalConv2d(nn.Module):
         input = torch.reshape(input,(batch_size,self.output_channels,self.input_channels,self.beam_size_px,self.beam_size_px))
         kernel = kernel.repeat(batch_size,1,1,1)
         kernel = torch.reshape(kernel,(batch_size,self.output_channels,self.input_channels,self.beam_size_px,self.beam_size_px))
-        output = self.opt.optConv2d(input, kernel, pseudo_negativity=self.pseudo_negativity)
+        output = self.opt.optConv2d(input, kernel, pseudo_negativity=self.pseudo_negativity,noise=self.noise)
         output = torch.sum(output, dim=2,dtype=torch.float32)
 
         #Upadding the input
@@ -107,8 +107,4 @@ class OpticalConv2d(nn.Module):
         #add bias
         if self.is_bias:
             output += self.bias.repeat(batch_size,1,1,1)
-        if self.noise=="Poisson":
-            output = output*255
-            noise_matrix = Poisson(output).sample()
-            return (output + noise_matrix)/255
         return output
