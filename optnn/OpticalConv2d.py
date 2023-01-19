@@ -19,7 +19,7 @@ class OpticalConv2d(nn.Module):
     :type input_size: int
     """
 
-    def __init__(self,input_channels,output_channels,kernel_size,is_bias=True,pseudo_negativity=False,input_size=28, noise="Poisson"):
+    def __init__(self,input_channels,output_channels,kernel_size,is_bias=True,pseudo_negativity=False,input_size=28, noise=True):
         super().__init__()
         self.pseudo_negativity = pseudo_negativity
         self.input_channels, self.output_channels = input_channels, output_channels
