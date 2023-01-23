@@ -8,3 +8,5 @@ venv
 __pycache__
 __pycache__/
 runs/
+/dist
+/dist/*
