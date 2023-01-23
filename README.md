@@ -15,6 +15,12 @@ FatNet is the type of the neural network transformation, which can potentially m
 neural network more compatible with the free-space optics. The description of FatNet can be found in the paper
 described in the "Paper" section.
 
+### Install using pip ###
+```commandline
+pip install optnn
+```
+[Link to PyPI](https://pypi.org/project/optnn/)
+
 ### How to Run ###
 
 #### Simulation of 4f system ####
@@ -26,7 +32,7 @@ from optnn import OpticalConv2d
 Optical convolutional layer structure is:
 
 ```Python
-OpticalConv2d(input_channels, output_channels, kernel_size, is_bias=True, pseudo_negativity=False, input_size=28)
+OpticalConv2d(input_channels, output_channels, kernel_size, is_bias=True, pseudo_negativity=False, input_size=28, noise=True)
 ```
 PS: if input_size of the layer has to be passed, the default value for input is **28x28**. 
 
