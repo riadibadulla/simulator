@@ -1,4 +1,4 @@
-[![arXiv](https://img.shields.io/badge/arXiv-2210.16914-00ff00.svg)](https://arxiv.org/abs/2210.16914)
+[![arXiv](https://img.shields.io/badge/MDPI--AI-10.3390%2Fai4020018-blue)](https://www.mdpi.com/2673-2688/4/2/18)
 
 
 # Optical Neural Network simulator and FatNet
@@ -51,8 +51,8 @@ The models you can use are:
 PS: Optical Fatnet is the only model that will use the simulator
 
 ### Paper ###
-
-<a href="https://arxiv.org/abs/2210.16914">**Title: FatNet: High Resolution Kernels for Classification Using Fully Convolutional Optical Neural Networks**</a>
+<a href ="https://www.mdpi.com/2673-2688/4/2/18">![](Figures/banner.png)</a>
+<a href="https://www.mdpi.com/2673-2688/4/2/18">**Title: FatNet: High Resolution Kernels for Classification Using Fully Convolutional Optical Neural Networks**</a>
 
 Authors: Riad Ibadulla, Thomas M. Chen and Constantino Carlos Reyes-Aldasoro
 
